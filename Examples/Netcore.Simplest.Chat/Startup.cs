@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Netcore.Simplest.Chat.Integration;
 using Netcore.Simplest.Chat.Models;
@@ -46,7 +47,7 @@ namespace Netcore.Simplest.Chat
                 .AddSignalR()
                 .AddJsonProtocol(o =>
                 {
-                    o.PayloadSerializerSettings.ContractResolver = new DefaultContractResolver();
+//                    o.PayloadSerializerSettings.ContractResolver = new DefaultContractResolver();
                 })
                 .AddHubOptions<ChatHub>(o =>
                 {
@@ -66,7 +67,7 @@ namespace Netcore.Simplest.Chat
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IConfiguration config)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IConfiguration config)
         {
             _log.LogInformation("Configure...");
             if (env.IsDevelopment())
