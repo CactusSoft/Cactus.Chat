@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <LangVersion>7.2</LangVersion>
+    <ProjectGuid>{289A84BC-04BC-4679-8422-6C1BAD889CDE}</ProjectGuid>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="2.2.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+    <PackageReference Include="StreamJsonRpc" Version="2.0.146" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Cactus.Chat.Connection\Cactus.Chat.Connection.csproj" />
+    <ProjectReference Include="..\Cactus.Chat.Transport\Cactus.Chat.Transport.csproj" />
+  </ItemGroup>
+
+</Project>

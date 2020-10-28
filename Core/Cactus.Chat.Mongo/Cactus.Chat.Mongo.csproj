@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Company>CactusSoft LLC</Company>
+    <Product>Cactus.Chat</Product>
+    <Authors>YanO</Authors>
+    <Copyright>CactusSoft LLC</Copyright>
+    <PackageProjectUrl>https://gitlab.cactussoft.biz/int/chat/backend</PackageProjectUrl>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Version>2.0.11</Version>
+    <Description>MongoDB storage implementation</Description>
+    <PackageIconUrl>http://vserver.inside.cactussoft.biz/kartman-icon.png</PackageIconUrl>
+    <PackageReleaseNotes />
+    <ProjectGuid>{2BB0054F-5D85-4DCF-992A-B6E87E1C39BB}</ProjectGuid>
+    <AssemblyVersion>2.0.11.0</AssemblyVersion>
+    <FileVersion>2.0.11.0</FileVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;NETSTANDARD1_6</DefineConstants>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>bin\Release\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='NugetPublish|AnyCPU'">
+    <OutputPath>bin\Release\</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MongoDB.Driver" Version="2.8.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Cactus.Chat\Cactus.Chat.csproj" />
+  </ItemGroup>
+</Project>

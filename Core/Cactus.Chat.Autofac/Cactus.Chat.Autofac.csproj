@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Version>2.0.1</Version>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Description>Autofac extensins</Description>
+    <Copyright>CactusSoft LLC</Copyright>
+    <PackageLicenseUrl>https://cactussoft.biz/licence</PackageLicenseUrl>
+    <PackageProjectUrl>https://gitlab.cactussoft.biz/int/chat/backend</PackageProjectUrl>
+    <PackageIconUrl>http://vserver.inside.cactussoft.biz/kartman-icon.png</PackageIconUrl>
+    <ProjectGuid>{5243BFE6-7B3D-4B58-A9A4-6555D38E8C20}</ProjectGuid>
+    <AssemblyVersion>2.0.1.0</AssemblyVersion>
+    <FileVersion>2.0.1.0</FileVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Autofac" Version="4.9.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Cactus.Chat\Cactus.Chat.csproj" />
+  </ItemGroup>
+
+</Project>

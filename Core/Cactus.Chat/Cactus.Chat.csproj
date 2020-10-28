@@ -1,0 +1,50 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Company>CactusSoft LLC</Company>
+    <Product>Cactus.Chat</Product>
+    <Authors>YanO</Authors>
+    <Copyright>CactusSoft LLC</Copyright>
+    <PackageProjectUrl>https://gitlab.cactussoft.biz/int/chat/backend</PackageProjectUrl>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Version>2.0.10</Version>
+    <Description>Chat core</Description>
+    <PackageIconUrl>http://vserver.inside.cactussoft.biz/kartman-icon.png</PackageIconUrl>
+    <PackageLicenseUrl>https://cactussoft.biz/licence</PackageLicenseUrl>
+    <ProjectGuid>{233B6069-692B-44CB-9501-570CCEAFB015}</ProjectGuid>
+    <AssemblyVersion>2.0.10.0</AssemblyVersion>
+    <FileVersion>2.0.10.0</FileVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;LIBLOG_PUBLIC;LIBLOG_PORTABLE;</DefineConstants>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;LIBLOG_PUBLIC;LIBLOG_PORTABLE;</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='NugetPublish|AnyCPU'">
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;LIBLOG_PUBLIC;LIBLOG_PORTABLE;</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LibLog" Version="5.0.6">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
+    <PackageReference Include="System.Reflection" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Cactus.Chat.Model\Cactus.Chat.Model.csproj" />
+	<ProjectReference Include="..\Cactus.Chat.Events\Cactus.Chat.Events.csproj" />
+  </ItemGroup>
+</Project>
