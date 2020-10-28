@@ -121,6 +121,8 @@ namespace Netcore.Simplest.Chat
 
                             _log.LogDebug("{0}/{1} connected, send UserConnected broadcast", connectionId, userId);
 
+                            
+#pragma warning disable 4014
                             //DO NOT await it
                             eventHub.FireEvent(new UserConnected
                             {
@@ -128,6 +130,7 @@ namespace Netcore.Simplest.Chat
                                 ConnectionId = connectionId,
                                 UserId = auth.GetUserId()
                             });
+#pragma warning restore 4014                            
 
 
                             await listenTask;

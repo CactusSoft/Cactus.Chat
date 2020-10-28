@@ -146,16 +146,16 @@ namespace Cactus.Chat.WebSockets
             }
 
             cancellationToken.ThrowIfCancellationRequested();
-            using (var ms = new MemoryStream(buffer.Length * 2))
+            using var ms = new MemoryStream(buffer.Length * 2);
             {
-                ms.Write(buffer, 0, res.Count);
+                await ms.WriteAsync(buffer, 0, res.Count, cancellationToken);
                 while (!res.EndOfMessage)
                 {
                     res = await _ws.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
-                    ms.Write(buffer, 0, res.Count);
+                    await ms.WriteAsync(buffer, 0, res.Count, cancellationToken);
                 }
 
-                ms.Flush();
+                await ms.FlushAsync(cancellationToken);
                 ms.Seek(0, SeekOrigin.Begin);
                 var msg = new ReadOnlySequence<byte>(ms.ToArray());
                 Log.Debug(() => $"Received through mem stream: {Encoding.UTF8.GetString(msg.ToArray())}");

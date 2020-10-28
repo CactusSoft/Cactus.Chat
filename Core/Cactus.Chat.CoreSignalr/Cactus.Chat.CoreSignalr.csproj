@@ -5,6 +5,8 @@
     <RootNamespace>Cactus.Chat.Signalr</RootNamespace>
     <Version>1.0.0</Version>
     <ProjectGuid>{389A84BC-04BC-4959-8422-6C1BAD871CDE}</ProjectGuid>
+    <LangVersion>9</LangVersion>
+    <RepositoryUrl>https://github.com/CactusSoft/Cactus.Chat</RepositoryUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

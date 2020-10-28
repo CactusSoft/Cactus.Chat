@@ -6,12 +6,14 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Description>Autofac extensins</Description>
     <Copyright>CactusSoft LLC</Copyright>
-    <PackageLicenseUrl>https://cactussoft.biz/licence</PackageLicenseUrl>
-    <PackageProjectUrl>https://gitlab.cactussoft.biz/int/chat/backend</PackageProjectUrl>
-    <PackageIconUrl>http://vserver.inside.cactussoft.biz/kartman-icon.png</PackageIconUrl>
+    <PackageLicenseUrl></PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/CactusSoft/Cactus.Chat</PackageProjectUrl>
+    <PackageIconUrl></PackageIconUrl>
     <ProjectGuid>{5243BFE6-7B3D-4B58-A9A4-6555D38E8C20}</ProjectGuid>
     <AssemblyVersion>2.0.1.0</AssemblyVersion>
     <FileVersion>2.0.1.0</FileVersion>
+    <LangVersion>9</LangVersion>
+    <RepositoryUrl>https://github.com/CactusSoft/Cactus.Chat</RepositoryUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

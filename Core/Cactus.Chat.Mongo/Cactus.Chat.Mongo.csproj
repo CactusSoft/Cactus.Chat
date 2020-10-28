@@ -10,11 +10,13 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Version>2.0.11</Version>
     <Description>MongoDB storage implementation</Description>
-    <PackageIconUrl>http://vserver.inside.cactussoft.biz/kartman-icon.png</PackageIconUrl>
+    <PackageIconUrl></PackageIconUrl>
     <PackageReleaseNotes />
     <ProjectGuid>{2BB0054F-5D85-4DCF-992A-B6E87E1C39BB}</ProjectGuid>
     <AssemblyVersion>2.0.11.0</AssemblyVersion>
     <FileVersion>2.0.11.0</FileVersion>
+    <RepositoryUrl>https://github.com/CactusSoft/Cactus.Chat</RepositoryUrl>
+    <LangVersion>9</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

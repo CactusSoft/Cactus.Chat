@@ -9,14 +9,17 @@
     <Authors>Cactus.Chat.Model</Authors>
     <Copyright>CactusSoft LLC</Copyright>
     <PackageProjectUrl>https://gitlab.cactussoft.biz/int/chat/backend</PackageProjectUrl>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Version>2.0.9</Version>
     <Description>Chat domain model</Description>
-    <PackageIconUrl>http://vserver.inside.cactussoft.biz/kartman-icon.png</PackageIconUrl>
+    <PackageIconUrl></PackageIconUrl>
     <PostBuildEvent></PostBuildEvent>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
     <PreBuildEvent></PreBuildEvent>
     <ProjectGuid>{E1BDABF6-0E8F-4B60-9977-7392D9AF6059}</ProjectGuid>
+    <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <RepositoryUrl>https://github.com/CactusSoft/Cactus.Chat</RepositoryUrl>
+    <LangVersion>9</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

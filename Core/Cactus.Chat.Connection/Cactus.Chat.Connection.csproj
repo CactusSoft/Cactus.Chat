@@ -7,6 +7,8 @@
     <Authors>YanO</Authors>
     <Description>Representaion of persistent chat connection</Description>
     <ProjectGuid>{129A84BC-04BC-4989-8433-6C1BAD871CDE}</ProjectGuid>
+    <LangVersion>9</LangVersion>
+    <RepositoryUrl>https://github.com/CactusSoft/Cactus.Chat</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
