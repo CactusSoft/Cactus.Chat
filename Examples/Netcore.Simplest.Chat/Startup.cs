@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json;
 using System.Threading;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
@@ -22,6 +23,7 @@ using Netcore.Simplest.Chat.Models;
 using Netcore.Simplest.Chat.Signalr;
 using Netcore.Simplest.Chat.Start;
 using Netcore.Simplest.Chat.WebSockets;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
 namespace Netcore.Simplest.Chat
@@ -45,10 +47,17 @@ namespace Netcore.Simplest.Chat
             _log.LogInformation("ConfigureServices...");
             services
                 .AddSignalR()
-                .AddJsonProtocol(o =>
+                .AddNewtonsoftJsonProtocol(o =>
                 {
-//                    o.PayloadSerializerSettings.ContractResolver = new DefaultContractResolver();
+                    o.PayloadSerializerSettings.NullValueHandling = NullValueHandling.Ignore;
+                    o.PayloadSerializerSettings.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
+                    o.PayloadSerializerSettings.ContractResolver = new DefaultContractResolver
+                        {NamingStrategy = new DefaultNamingStrategy()};
                 })
+                // .AddJsonProtocol(o =>
+                // {
+                //     o.PayloadSerializerOptions.PropertyNamingPolicy=JsonNamingPolicy.CamelCase;
+                // })
                 .AddHubOptions<ChatHub>(o =>
                 {
                     o.EnableDetailedErrors = true;
@@ -83,8 +92,8 @@ namespace Netcore.Simplest.Chat
                     await func();
                 })
                 .Map("/ws", b => b
-                     .UseWebSockets()
-                     .Run(async ctx =>
+                    .UseWebSockets()
+                    .Run(async ctx =>
                     {
                         _log.LogDebug("Someone knocked to /ws endpoint...");
                         if (!ctx.User.Identity.IsAuthenticated)
@@ -93,6 +102,7 @@ namespace Netcore.Simplest.Chat
                             ctx.Response.StatusCode = 401;
                             return;
                         }
+
                         if (!ctx.WebSockets.IsWebSocketRequest)
                         {
                             _log.LogWarning("Not a WebSocket request, return HTTP 400");
@@ -101,28 +111,31 @@ namespace Netcore.Simplest.Chat
                         }
 
                         var connectionId = Guid.NewGuid().ToString("N");
-                        var auth = new AuthContext(ctx.User.Identity) { ConnectionId = connectionId };
+                        var auth = new AuthContext(ctx.User.Identity) {ConnectionId = connectionId};
                         var userId = auth.GetUserId();
                         _log.LogDebug("Income connection: {0}/{1}", connectionId, userId);
                         var eventHub = b.ApplicationServices.GetRequiredService<IEventHub>();
                         var connectionStorage = b.ApplicationServices.GetRequiredService<IConnectionStorage>();
-                        var chatService = b.ApplicationServices.GetRequiredService<IChatService<Chat<CustomIm, CustomProfile>, CustomIm, CustomProfile>>();
+                        var chatService = b.ApplicationServices
+                            .GetRequiredService<IChatService<Chat<CustomIm, CustomProfile>, CustomIm, CustomProfile>>();
                         var broadcastGroup = "*";
                         var broadcastDelimeterIndex = userId.IndexOf('@');
                         if (broadcastDelimeterIndex > 0 && broadcastDelimeterIndex < userId.Length)
                             broadcastGroup = userId.Substring(broadcastDelimeterIndex + 1);
                         _log.LogDebug("Broadcast group: {0}", broadcastGroup);
                         var socket = await ctx.WebSockets.AcceptWebSocketAsync();
-                        using (var chatConnection = new ChatConnection(connectionId, auth.GetUserId(), broadcastGroup, socket))
+                        using (var chatConnection =
+                            new ChatConnection(connectionId, auth.GetUserId(), broadcastGroup, socket))
                         {
                             //TODO broadcast userConnected/userDisconnected
                             connectionStorage.Add(chatConnection);
-                            var listenTask = chatConnection.ListenAsync(new JrpcChatServerEndpoint(chatService, auth, connectionStorage),
+                            var listenTask = chatConnection.ListenAsync(
+                                new JrpcChatServerEndpoint(chatService, auth, connectionStorage),
                                 CancellationToken.None);
 
                             _log.LogDebug("{0}/{1} connected, send UserConnected broadcast", connectionId, userId);
 
-                            
+
 #pragma warning disable 4014
                             //DO NOT await it
                             eventHub.FireEvent(new UserConnected
@@ -131,12 +144,13 @@ namespace Netcore.Simplest.Chat
                                 ConnectionId = connectionId,
                                 UserId = auth.GetUserId()
                             });
-#pragma warning restore 4014                            
+#pragma warning restore 4014
 
 
                             await listenTask;
                             connectionStorage.Delete(connectionId);
-                            _log.LogDebug("Connection {0}/{1} is closed, send UserDisconnected broadcast", connectionId, userId);
+                            _log.LogDebug("Connection {0}/{1} is closed, send UserDisconnected broadcast", connectionId,
+                                userId);
                             await eventHub.FireEvent(new UserDisconnected
                             {
                                 BroadcastGroup = broadcastGroup,
@@ -146,19 +160,15 @@ namespace Netcore.Simplest.Chat
                         }
                     }))
                 .Map("/sr", b => b
-                    .UseSignalR(routes =>
-                    {
-                        routes.MapHub<ChatHub>("");
-                    })
+                    .UseSignalR(routes => { routes.MapHub<ChatHub>(""); })
                 ).Run(async ctx =>
                 {
                     _log.LogWarning("Default handler reached. Wrong request?");
                     ctx.Response.StatusCode = 400;
                     ctx.Response.ContentType = "plain/text";
-                    await ctx.Response.WriteAsync("JsonRPC over WebSockets? No. SignalR Core? Nope... hmm... What the damn are you looking for then???");
+                    await ctx.Response.WriteAsync(
+                        "JsonRPC over WebSockets? No. SignalR Core? Nope... hmm... What the damn are you looking for then???");
                 });
         }
     }
-
-
 }

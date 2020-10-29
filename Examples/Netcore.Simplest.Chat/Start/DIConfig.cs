@@ -67,7 +67,7 @@ namespace Netcore.Simplest.Chat.Start
                 {
                     NullValueHandling = NullValueHandling.Ignore,
                     DateTimeZoneHandling = DateTimeZoneHandling.Utc,
-                    ContractResolver = new CamelCasePropertyNamesContractResolver()
+                    ContractResolver = new DefaultContractResolver { NamingStrategy = new DefaultNamingStrategy()}
                 };
                 return JsonSerializer.Create(serializerSettings);
             }).As<JsonSerializer>().SingleInstance();
