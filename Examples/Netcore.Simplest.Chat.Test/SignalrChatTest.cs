@@ -7,6 +7,8 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
@@ -29,6 +31,8 @@ namespace Netcore.Simplest.Chat.Test
 
             if (_hostedChat == null)
                 _hostedChat = WebHost.CreateDefaultBuilder()
+                    .ConfigureAppConfiguration(c =>
+                        c.AddInMemoryCollection(new[] {new KeyValuePair<string, string>("storage:type", "inMemory"),}))
                     .UseKestrel()
                     .UseUrls(BaseUrl)
                     .UseStartup<Startup>()
@@ -60,13 +64,15 @@ namespace Netcore.Simplest.Chat.Test
             catch (Exception ex)
             {
                 Assert.IsTrue(ex is HubException, $"Not a HubException, but {ex.GetType()}: {ex.Message}");
-                Assert.IsTrue(ex.Message.Contains("ErrorInfo: {"), $"Error info not found in the message: {ex.Message}");
+                Assert.IsTrue(ex.Message.Contains("ErrorInfo: {"),
+                    $"Error info not found in the message: {ex.Message}");
                 return;
             }
             finally
             {
                 await connection.DisposeAsync();
             }
+
             Assert.Fail("No exception was risen");
         }
 
@@ -239,10 +245,10 @@ namespace Netcore.Simplest.Chat.Test
             var butters = await Connect(buttersAuth);
 
             var timmyTask = Task.Run(async () =>
-              {
-                  chatId1 = (await timmy.hub.StartChat(null, buttersAuth.User)).Id;
-                  await timmy.hub.SendMessage(chatId1, "Timmyyyyy!!!");
-              });
+            {
+                chatId1 = (await timmy.hub.StartChat(null, buttersAuth.User)).Id;
+                await timmy.hub.SendMessage(chatId1, "Timmyyyyy!!!");
+            });
 
             var buttersTask = Task.Run(async () =>
             {
@@ -264,13 +270,19 @@ namespace Netcore.Simplest.Chat.Test
             {
                 Trace.WriteLine(ev.Key + " : " + ev);
             }
+
             Trace.WriteLine("Timmy events (" + timmy.events.Count + "):");
             foreach (var ev in timmy.events)
             {
                 Trace.WriteLine(ev.Key);
             }
-            Assert.IsNotNull(butters.events.Single(e => e.Key == "messageNew" && e.Value["ChatId"].Value<string>() == chatId1), "Ooops, Butters did not received message");
-            Assert.IsNotNull(timmy.events.Single(e => e.Key == "messageNew" && e.Value["ChatId"].Value<string>() == chatId1), "Ooops, Timmy did not received message");
+
+            Assert.IsNotNull(
+                butters.events.Single(e => e.Key == "messageNew" && e.Value["ChatId"].Value<string>() == chatId1),
+                "Ooops, Butters did not received message");
+            Assert.IsNotNull(
+                timmy.events.Single(e => e.Key == "messageNew" && e.Value["ChatId"].Value<string>() == chatId1),
+                "Ooops, Timmy did not received message");
         }
 
         [TestMethod]
@@ -454,6 +466,7 @@ namespace Netcore.Simplest.Chat.Test
             var connection = new HubConnectionBuilder()
                 .WithUrl(signalrEndpoint, o => o.Headers.Add("Authorization", auth.BuildAuthToken()))
                 .ConfigureLogging(b => b.AddConsole().AddDebug())
+                .AddNewtonsoftJsonProtocol()
                 .Build();
 
             connection.On<JObject>("messageNew", x => callBackAction("messageNew", x));
@@ -467,10 +480,13 @@ namespace Netcore.Simplest.Chat.Test
             connection.On<JObject>("participantLeft", x => callBackAction("participantLeft", x));
 
             await connection.StartAsync();
-            TraceCallback("Connected", JObject.FromObject(new { auth.User }));
+            TraceCallback("Connected", JObject.FromObject(new {auth.User}));
             connection.Closed += e =>
             {
-                TraceCallback("Connection closed", e == null ? JObject.FromObject(new { auth.User }) : JObject.FromObject(new { auth.User, Exception = e }));
+                TraceCallback("Connection closed",
+                    e == null
+                        ? JObject.FromObject(new {auth.User})
+                        : JObject.FromObject(new {auth.User, Exception = e}));
                 return Task.CompletedTask;
             };
 

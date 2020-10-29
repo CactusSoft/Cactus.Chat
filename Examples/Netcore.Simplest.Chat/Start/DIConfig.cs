@@ -13,6 +13,7 @@ using Netcore.Simplest.Chat.Integration;
 using Netcore.Simplest.Chat.Models;
 using Netcore.Simplest.Chat.Signalr;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace Netcore.Simplest.Chat.Start
 {
@@ -65,7 +66,8 @@ namespace Netcore.Simplest.Chat.Start
                 var serializerSettings = new JsonSerializerSettings
                 {
                     NullValueHandling = NullValueHandling.Ignore,
-                    DateTimeZoneHandling = DateTimeZoneHandling.Utc
+                    DateTimeZoneHandling = DateTimeZoneHandling.Utc,
+                    ContractResolver = new CamelCasePropertyNamesContractResolver()
                 };
                 return JsonSerializer.Create(serializerSettings);
             }).As<JsonSerializer>().SingleInstance();
