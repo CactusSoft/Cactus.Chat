@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
@@ -7,6 +8,7 @@ using System.Net.WebSockets;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Netcore.Simplest.Chat.Test
@@ -22,10 +24,12 @@ namespace Netcore.Simplest.Chat.Test
         public static void StartSimpleChat(TestContext context)
         {
             BaseUrl = "http://localhost:5000/";
-            BaseUrl = "http://localhost:5002/";
+            //BaseUrl = "http://localhost:5002/";
 
             if (_hostedChat == null)
                 _hostedChat = WebHost.CreateDefaultBuilder()
+                    .ConfigureAppConfiguration(c =>
+                        c.AddInMemoryCollection(new[] {new KeyValuePair<string, string>("storage:type", "inMemory"),}))
                     .UseUrls(BaseUrl)
                     .UseStartup<Startup>()
                     .Start(BaseUrl);
