@@ -3,25 +3,27 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
-using Cactus.Chat.Logging;
 using Cactus.Chat.Model;
 using Cactus.Chat.Model.Base;
+using Cactus.Chat.Storage;
+using Microsoft.Extensions.Logging;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 
-namespace Cactus.Chat.Storage
+namespace Cactus.Chat.Mongo
 {
     public class MongoChatDao<T1, T2, T3> : IChatDao<T1, T2, T3>
         where T1 : Chat<T2, T3>
         where T2 : InstantMessage
         where T3 : IChatProfile
     {
-        private readonly ILog _log = LogProvider.GetLogger("Cactus.Chat.Storage.MongoChatDao");
         protected readonly IMongoCollection<T1> ChatCollection;
+        private readonly ILogger _log;
 
-        public MongoChatDao(IMongoCollection<T1> chatCollection)
+        public MongoChatDao(IMongoCollection<T1> chatCollection, ILogger log)
         {
             ChatCollection = chatCollection;
+            _log = log;
         }
 
         public virtual async Task<IEnumerable<T1>> GetUserChatList(string userId, Expression<Func<T1, bool>> filter = null)
@@ -33,9 +35,9 @@ namespace Cactus.Chat.Storage
                 query = query & qBuilder.Where(filter);
             }
 
-            if (_log.IsDebugEnabled())
+            if (_log.IsEnabled(LogLevel.Debug))
             {
-                _log.DebugFormat("Get chat list by query: {0}",
+                _log.LogDebug("Get chat list by query: {mongo_query}",
                     query.Render(
                         BsonSerializer.SerializerRegistry.GetSerializer<T1>(),
                         BsonSerializer.SerializerRegistry));

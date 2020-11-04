@@ -6,10 +6,11 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Cactus.Chat.Logging;
+using Microsoft.Extensions.Logging;
 using Nerdbank.Streams;
 using StreamJsonRpc;
 using StreamJsonRpc.Protocol;
+
 [assembly: InternalsVisibleTo("Cactus.Chat.WebSocket.Test")]
 
 namespace Cactus.Chat.WebSockets
@@ -24,23 +25,24 @@ namespace Cactus.Chat.WebSockets
     {
         internal static readonly string GoodbyMessage = "Goodby, see you!";
         protected static readonly int ReadBufferSize = 1024 * 4;
-        private static readonly ILog Log = LogProvider.GetLogger(typeof(JrpcWebSocket));
         private readonly WebSocket _ws;
+        private readonly ILogger<JrpcWebSocket> _log;
         private readonly IJsonRpcMessageTextFormatter _serializer;
         private bool _disposed;
         private readonly SemaphoreSlim _shutdownLock = new SemaphoreSlim(1);
         private readonly SemaphoreSlim _writeLock = new SemaphoreSlim(1);
 
-        public JrpcWebSocket(WebSocket ws)
+        public JrpcWebSocket(WebSocket ws, ILogger<JrpcWebSocket> log)
         {
             _ws = ws;
+            _log = log;
             _serializer = new JsonMessageFormatter();
         }
 
         public async ValueTask<JsonRpcMessage> ReadAsync(CancellationToken cancellationToken)
         {
             if (_disposed)
-                throw new ObjectDisposedException("websocket");
+                throw new ObjectDisposedException(nameof(JrpcWebSocket));
             try
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -55,19 +57,20 @@ namespace Cactus.Chat.WebSockets
             }
             catch (OperationCanceledException)
             {
-                Log.Info("We are shutting down...");
+                _log.LogInformation("We are shutting down...");
                 if (_ws.State == WebSocketState.Open)
                 {
-                    Log.Info("Saying goodby...");
+                    _log.LogInformation("Saying goodby...");
                     await _ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "Shutting down", CancellationToken.None);
                 }
+
                 throw;
             }
 
-            Log.Info("Close message received, do graceful socket shutdown...");
+            _log.LogInformation("Close message received, do graceful socket shutdown...");
             var closeStatus = _ws.CloseStatus.HasValue ? _ws.CloseStatus.Value.ToString("G") : "unknown";
             await _ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, GoodbyMessage, cancellationToken);
-            Log.Info("WebSocket closed, status: {0} / {1}", closeStatus, _ws.CloseStatusDescription);
+            _log.LogInformation("WebSocket closed, status: {0} / {1}", closeStatus, _ws.CloseStatusDescription);
             return null;
         }
 
@@ -87,19 +90,19 @@ namespace Cactus.Chat.WebSockets
                     }
                     else
                     {
-                        Log.Info("Websocket is {0}, nothing to shutdown.", _ws.State.ToString("G"));
+                        _log.LogInformation("Websocket is {0}, nothing to shutdown.", _ws.State.ToString("G"));
                     }
 
                     _shutdownLock.Release();
                 }
                 else
                 {
-                    Log.WarnFormat("Waiting for shutdown semaphore is failed. Do nothing.");
+                    _log.LogWarning("Waiting for shutdown semaphore is failed. Do nothing.");
                 }
             }
             else
             {
-                Log.WarnFormat("Websocket is {0}, no way to shutdown. Do nothing.", _ws.State.ToString("G"));
+                _log.LogWarning("Websocket is {ws_state:G}, no way to shutdown. Do nothing.", _ws.State);
             }
         }
 
@@ -107,7 +110,7 @@ namespace Cactus.Chat.WebSockets
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (_disposed)
-                throw new ObjectDisposedException("websocket");
+                throw new ObjectDisposedException(nameof(JrpcWebSocket));
 
             if (!await _writeLock.WaitAsync(5000, cancellationToken))
                 throw new SynchronizationLockException("Unable to retrieve lock for write operation");
@@ -120,12 +123,12 @@ namespace Cactus.Chat.WebSockets
                     _serializer.Serialize(builder, message);
                     var output = builder.AsReadOnlySequence.ToArray();
                     await _ws.SendAsync(output, WebSocketMessageType.Text, true, cancellationToken);
-                    Log.Debug(() => $"Sent: {Encoding.UTF8.GetString(output)}");
+                    _log.LogDebug("Sent: {ws_message}", Encoding.UTF8.GetString(output));
                 }
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Error on write to socket");
+                _log.LogError(ex, "Error on write to socket");
                 throw;
             }
             finally
@@ -136,12 +139,13 @@ namespace Cactus.Chat.WebSockets
 
         public WebSocketState State => _ws.State;
 
-        private async Task<ReadOnlySequence<byte>> ReceivePayloadAsync(WebSocketReceiveResult res, byte[] buffer, CancellationToken cancellationToken)
+        private async Task<ReadOnlySequence<byte>> ReceivePayloadAsync(WebSocketReceiveResult res, byte[] buffer,
+            CancellationToken cancellationToken)
         {
             if (res.EndOfMessage)
             {
                 var msg = new ReadOnlySequence<byte>(buffer, 0, res.Count);
-                Log.Debug(() => $"Received at once: {Encoding.UTF8.GetString(msg.ToArray())}");
+                _log.LogDebug("Received at once: {ws_message}", Encoding.UTF8.GetString(msg.ToArray()));
                 return msg;
             }
 
@@ -158,7 +162,7 @@ namespace Cactus.Chat.WebSockets
                 await ms.FlushAsync(cancellationToken);
                 ms.Seek(0, SeekOrigin.Begin);
                 var msg = new ReadOnlySequence<byte>(ms.ToArray());
-                Log.Debug(() => $"Received through mem stream: {Encoding.UTF8.GetString(msg.ToArray())}");
+                _log.LogDebug("Received through mem stream: {ws_message}", Encoding.UTF8.GetString(msg.ToArray()));
                 return msg;
             }
         }

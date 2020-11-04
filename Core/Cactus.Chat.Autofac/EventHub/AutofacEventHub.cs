@@ -3,24 +3,25 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Autofac;
 using Cactus.Chat.External;
-using Cactus.Chat.Logging;
+using Microsoft.Extensions.Logging;
 
 namespace Cactus.Chat.Autofac
 {
     public class AutofacEventHub : IEventHub
     {
-        private readonly ILog log = LogProvider.GetLogger(typeof(AutofacEventHub));
-        private readonly IComponentContext container;
+        private readonly IComponentContext _container;
+        private readonly ILogger<AutofacEventHub> _log;
 
-        public AutofacEventHub(IComponentContext container)
+        public AutofacEventHub(IComponentContext container, ILogger<AutofacEventHub> log)
         {
-            this.container = container;
+            this._container = container;
+            _log = log;
         }
 
         public async Task FireEvent<T>(T msg)
         {
             var handlerExist = false;
-            var handlers = container.Resolve<IEnumerable<IEventHandler<T>>>();
+            var handlers = _container.Resolve<IEnumerable<IEventHandler<T>>>();
             if (handlers != null)
             {
                 foreach (var handler in handlers)
@@ -31,7 +32,7 @@ namespace Cactus.Chat.Autofac
                     }
                     catch (Exception e)
                     {
-                        log.ErrorFormat("Fail to execute event {0} in handler {1}: {2}", typeof(T).Name, handler.GetType(), e);
+                        _log.LogError("Fail to execute event {event} in handler {handler}: {exception}", typeof(T).Name, handler.GetType(), e);
                     }
                     handlerExist = true;
                 }
@@ -39,7 +40,7 @@ namespace Cactus.Chat.Autofac
 
             if (!handlerExist)
             {
-                log.WarnFormat("No handler found for {0}", typeof(T));
+                _log.LogWarning("No handler found for {event}", typeof(T));
             }
         }
     }

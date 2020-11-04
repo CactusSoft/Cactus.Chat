@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Cactus.Chat.Model
 {
@@ -20,12 +21,12 @@ namespace Cactus.Chat.Model
         public string Message { get; set; }
 
         /// <summary>
-        /// File content. Optional if Message is specified
+        /// Message attachments
         /// </summary>
-        public ChatFile File { get; set; }
+        public ICollection<Attachment> Attachments { get; set; }
     }
 
-    public class ChatFile
+    public class Attachment
     {
         public Uri Url { get; set; }
 

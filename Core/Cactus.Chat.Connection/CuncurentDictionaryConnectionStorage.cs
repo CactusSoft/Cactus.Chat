@@ -1,31 +1,36 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
-using Cactus.Chat.Logging;
+using Microsoft.Extensions.Logging;
 
 namespace Cactus.Chat.Connection
 {
     public class ConcurrentDictionaryConnectionStorage : IConnectionStorage
     {
-        private static readonly ILog Log = LogProvider.GetLogger(typeof(ConcurrentDictionaryConnectionStorage));
-        private readonly ConcurrentDictionary<string, IConnectionInfo> _storage = new ConcurrentDictionary<string, IConnectionInfo>();
+        private readonly ILogger<ConcurrentDictionaryConnectionStorage> _log;
 
-        public ConcurrentDictionaryConnectionStorage()
+        private readonly ConcurrentDictionary<string, IConnectionInfo> _storage =
+            new ConcurrentDictionary<string, IConnectionInfo>();
+
+        public ConcurrentDictionaryConnectionStorage(ILogger<ConcurrentDictionaryConnectionStorage> log)
         {
-            Log.Debug(".ctor");
+            _log = log;
+            _log.LogDebug(".ctor");
         }
 
         public void Add(IConnectionInfo info)
         {
             var res = _storage.AddOrUpdate(info.Id, info, (key, val) =>
-              {
-                  Log.WarnFormat("Existing connection found {0} : {1} / {2}, replace it with a new one {3} / {4}",
-                      key, val.UserId, val.BroadcastGroup, info.UserId, info.BroadcastGroup);
-                  return info;
-              });
-            if (Log.IsDebugEnabled())
             {
-                Log.DebugFormat("New connection added: {0} : {1} / {2}", res.Id, res.UserId, res.BroadcastGroup);
+                _log.LogWarning(
+                    "Existing connection found {connection_id} : {user_id} / {broadcast_group}, replace it with a new one {user_id_new} / {broadcast_group_new}",
+                    key, val.UserId, val.BroadcastGroup, info.UserId, info.BroadcastGroup);
+                return info;
+            });
+            if (_log.IsEnabled(LogLevel.Debug))
+            {
+                _log.LogDebug("New connection added: {connection_id} : {user_id} / {broadcast_group}", res.Id,
+                    res.UserId, res.BroadcastGroup);
                 LogStorage();
             }
         }
@@ -34,21 +39,23 @@ namespace Cactus.Chat.Connection
         {
             IConnectionInfo removedRec;
             _storage.TryRemove(connectionId, out removedRec);
-            if (Log.IsDebugEnabled())
+            if (_log.IsEnabled(LogLevel.Debug))
             {
                 if (removedRec == null)
-                    Log.DebugFormat("No connection found by id {0}", connectionId);
+                    _log.LogDebug("No connection found by id {connection_id}", connectionId);
                 else
-                    Log.DebugFormat("Connection dropped {0} : {1} / {2} ", removedRec.Id, removedRec.UserId, removedRec.BroadcastGroup);
+                    _log.LogDebug("Connection dropped {connection_id} : {user_id} / {broadcast_group}", removedRec.Id,
+                        removedRec.UserId, removedRec.BroadcastGroup);
                 LogStorage();
             }
+
             return removedRec;
         }
 
         public IConnectionInfo Get(string connectionId)
         {
             if (!_storage.TryGetValue(connectionId, out var val))
-                Log.DebugFormat("Connection not found by key {0}", connectionId);
+                _log.LogDebug("Connection not found by key {connection_id}", connectionId);
             return val;
         }
 
@@ -56,6 +63,7 @@ namespace Cactus.Chat.Connection
         {
             return _storage.Values;
         }
+
         private void LogStorage()
         {
             var b = new StringBuilder();
@@ -72,7 +80,8 @@ namespace Cactus.Chat.Connection
                     b.Append(" / ");
                     b.Append(item.Value.BroadcastGroup);
                 }
-            Log.Debug(b.ToString);
+
+            _log.LogDebug(b.ToString());
         }
     }
 }

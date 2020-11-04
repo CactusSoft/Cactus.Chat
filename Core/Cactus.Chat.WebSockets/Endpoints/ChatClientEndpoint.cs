@@ -1,36 +1,37 @@
 ﻿using System;
 using System.Text;
 using System.Threading.Tasks;
-using Cactus.Chat.Logging;
 using Cactus.Chat.Model;
 using Cactus.Chat.Model.Base;
 using Cactus.Chat.Transport;
 using Cactus.Chat.Transport.Models.Output;
+using Microsoft.Extensions.Logging;
 using StreamJsonRpc;
 
 namespace Cactus.Chat.WebSockets.Endpoints
 {
     public class ChatClientEndpoint : IChatClientEndpoint
     {
-        private static readonly ILog Log = LogProvider.GetLogger(typeof(ChatClientEndpoint));
         private readonly JsonRpc _rpc;
+        private readonly ILogger _log;
 
-        public ChatClientEndpoint(JsonRpc rpc)
+        public ChatClientEndpoint(JsonRpc rpc, ILogger log)
         {
-            Log.Debug(".ctor");
             _rpc = rpc;
+            _log = log;
+            _log.LogDebug(".ctor");
         }
 
         protected Task NotifyAsync(string message, params object[] arguments)
         {
-            if (Log.IsDebugEnabled())
+            if (_log.IsEnabled(LogLevel.Debug))
             {
                 var sb = new StringBuilder("Notify ");
                 sb.Append(message);
                 if (arguments?.Length > 0)
                 {
                     sb.Append('(');
-                    for (var i = 0; i < 0; i++)
+                    for (var i = 0; i < arguments.Length; i++)
                     {
                         sb.Append(arguments[i]);
                         if (i < arguments.Length - 1)
@@ -39,7 +40,7 @@ namespace Cactus.Chat.WebSockets.Endpoints
 
                     sb.Append(')');
                 }
-                Log.Debug(sb.ToString());
+                _log.LogDebug(sb.ToString());
             }
             return _rpc.NotifyAsync(message, arguments);
         }

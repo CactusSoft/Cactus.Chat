@@ -8,7 +8,6 @@ using Cactus.Chat.Connection;
 using Cactus.Chat.Core;
 using Cactus.Chat.Events;
 using Cactus.Chat.External;
-using Cactus.Chat.Logging;
 using Cactus.Chat.Model;
 using Cactus.Chat.Model.Base;
 using Cactus.Chat.Signalr.Connections;
@@ -16,7 +15,7 @@ using Cactus.Chat.Transport;
 using Cactus.Chat.Transport.Models.Input;
 using Cactus.Chat.Transport.Models.Output;
 using Microsoft.AspNetCore.SignalR;
-using Newtonsoft.Json;
+using Microsoft.Extensions.Logging;
 
 namespace Cactus.Chat.Signalr
 {
@@ -34,17 +33,19 @@ namespace Cactus.Chat.Signalr
         where T3 : IChatProfile
         where T4 : Hub
     {
-        private readonly ILog _log = LogProvider.GetLogger("Cactus.Chat.Signalr.AbstractChatHub");
+        private readonly ILogger _log;
         private readonly IChatService<T1, T2, T3> _chatService;
         private readonly IConnectionStorage _connectionStorage;
         private readonly IEventHub _bus;
 
-        protected AbstractChatHub(IChatService<T1, T2, T3> chatService, IConnectionStorage connectionStorage, IEventHub bus)
+        protected AbstractChatHub(IChatService<T1, T2, T3> chatService, IConnectionStorage connectionStorage,
+            IEventHub bus, ILogger log)
         {
-            this._chatService = chatService;
-            this._connectionStorage = connectionStorage;
-            this._bus = bus;
-            _log.Debug(".ctor");
+            _log = log;
+            _chatService = chatService;
+            _connectionStorage = connectionStorage;
+            _bus = bus;
+            _log.LogDebug(".ctor");
         }
 
         public async Task<Ping> Ping()
@@ -52,7 +53,7 @@ namespace Cactus.Chat.Signalr
             return new Ping
             {
                 ChatService = _chatService.GetType().Assembly.FullName,
-                Executable = Assembly.GetEntryAssembly().FullName,
+                Executable = Assembly.GetEntryAssembly()?.FullName,
                 Storage = await _chatService.GetStorageInfo(),
                 IsAuthenticated = Context.User.Identity.IsAuthenticated,
                 UserId = Context.User.Identity.IsAuthenticated ? AuthContext.GetUserId() : null,
@@ -63,37 +64,27 @@ namespace Cactus.Chat.Signalr
         public async Task<DateTime> SendMessage(string chatId, T2 message)
         {
             var ctx = AuthContext;
-            _log.Info(() => $"SendMessage(chatId:{chatId}) [{ctx.GetUserId()}]");
-            _log.Debug(() => $"Message: {JsonConvert.SerializeObject(message, Formatting.Indented)}");
-            await TranslateExceptionIfFail(async () =>
-            {
-                await _chatService.SendMessage(ctx, chatId, message);
-            });
+            _log.LogInformation("SendMessage(chatId:{chat_Id}) [{user_id}]", chatId, ctx.GetUserId());
+            await TranslateExceptionIfFail(async () => { await _chatService.SendMessage(ctx, chatId, message); });
 
-            _log.DebugFormat("Message sent to chatId {0}, returns {1}", chatId, message.Timestamp);
+            _log.LogDebug("Message sent to chatId {chat_id}, returns {timestamp}", chatId, message.Timestamp);
             return message.Timestamp;
         }
 
         public async Task<ChatSummary<T2, T3>> StartChat(T1 chat)
         {
             var ctx = AuthContext;
-            _log.Info(() => $"StartChat() [{ctx.GetUserId()}]");
-            _log.Debug(() => $"Payload: {JsonConvert.SerializeObject(chat, Formatting.Indented)}");
-            await TranslateExceptionIfFail(async () =>
-            {
-                chat = await _chatService.StartChat(AuthContext, chat);
-            });
+            _log.LogInformation("StartChat() [{user_id}]", ctx.GetUserId());
+            await TranslateExceptionIfFail(async () => { chat = await _chatService.StartChat(AuthContext, chat); });
 
-            _log.InfoFormat("Chat started, id: {0}", chat.Id);
-            _log.Debug(() => $"Result chat: {JsonConvert.SerializeObject(chat, Formatting.Indented)}");
-
+            _log.LogInformation("Chat started, id: {chat_id}", chat.Id);
             return BuildChatDto(chat, AuthContext.GetUserId());
         }
 
         public async Task<IEnumerable<ChatSummary<T2, T3>>> GetChats()
         {
             var ctx = AuthContext;
-            _log.Info(() => $"GetChats() [{ctx.GetUserId()}]");
+            _log.LogInformation("GetChats() [{user_id}]", ctx.GetUserId());
             var userId = ctx.GetUserId();
             var res = await _chatService.Get(ctx);
             return res.Select(e => BuildChatDto(e, userId));
@@ -102,10 +93,9 @@ namespace Cactus.Chat.Signalr
         public async Task<ChatSummary<T2, T3>> GetChat(string id)
         {
             var ctx = AuthContext;
-            _log.Info(() => $"GetChat(id:{id}) [{ctx.GetUserId()}]");
+            _log.LogInformation("GetChat(id:{chat_id}) [{user_id}]", id, ctx.GetUserId());
             var res = await _chatService.Get(ctx, id);
             var dto = BuildChatDto(res, ctx.GetUserId());
-            _log.Debug(() => $"Returned: {JsonConvert.SerializeObject(dto, Formatting.Indented)}");
             return dto;
         }
 
@@ -113,7 +103,9 @@ namespace Cactus.Chat.Signalr
             DateTime? to = null, int count = -1, bool moveBackward = false)
         {
             var ctx = AuthContext;
-            _log.Info(() => $"GetMessages(chatId:{chatId}, from:{from}, to:{to}, count:{count}, moveBackward:{moveBackward}) [{ctx.GetUserId()}]");
+            _log.LogInformation(
+                "GetMessages(chatId:{chat_id}, from:{from}, to:{to}, count:{count}, moveBackward:{move_backward}) [{user_id}]",
+                chatId, from, to, count, moveBackward, ctx.GetUserId());
             IEnumerable<T2> res;
             if (moveBackward)
             {
@@ -136,67 +128,51 @@ namespace Cactus.Chat.Signalr
                     moveBackward);
             }
 
-            if (_log.IsDebugEnabled())
-            {
-                var list = res.ToList();
-                res = list;
-                _log.Debug($"Result: {JsonConvert.SerializeObject(list, Formatting.Indented)}");
-            }
             return res;
         }
 
         public async Task ChangeTitle(string chatId, string title)
         {
             var ctx = AuthContext;
-            _log.Info(() => $"ChangeTitle(chatId:{chatId}, title:{title}) [{ctx.GetUserId()}]");
+            _log.LogInformation("ChangeTitle(chatId:{chat_id}, title:{chat_title}) [{user_id}]", chatId, title,
+                ctx.GetUserId());
             await _chatService.ChangeTitle(ctx, chatId, title);
         }
 
         public async Task LeaveChat(string chatId)
         {
             var ctx = AuthContext;
-            _log.Info(() => $"LeaveChat(chatId:{chatId}) [{ctx.GetUserId()}]");
-            await TranslateExceptionIfFail(async () =>
-            {
-                await _chatService.LeaveChat(ctx, chatId);
-            });
+            _log.LogInformation("LeaveChat(chatId:{chat_id}) [{user_id}]", chatId, ctx.GetUserId());
+            await TranslateExceptionIfFail(async () => { await _chatService.LeaveChat(ctx, chatId); });
         }
 
         public async Task Read(string chatId, DateTime timestamp)
         {
             var ctx = AuthContext;
-            _log.Info(() => $"Read(chatId:{chatId}, timestamp:{timestamp}) [{ctx.GetUserId()}]");
-            await TranslateExceptionIfFail(async () =>
-            {
-                await _chatService.MarkRead(ctx, chatId, timestamp);
-            });
+            _log.LogInformation("Read(chatId:{chat_id}, timestamp:{timestamp}) [{user_id)}]", chatId, timestamp,
+                ctx.GetUserId());
+            await TranslateExceptionIfFail(async () => { await _chatService.MarkRead(ctx, chatId, timestamp); });
         }
 
         public async Task ReadAll(DateTime timestamp)
         {
             var ctx = AuthContext;
-            _log.Info(() => $"ReadAll(timestamp:{timestamp}) [{ctx.GetUserId()}]");
-            await TranslateExceptionIfFail(async () =>
-            {
-                await _chatService.MarkReadBulk(ctx, timestamp);
-            });
+            _log.LogInformation("ReadAll(timestamp:{timestamp}) [{user_id}]", timestamp, ctx.GetUserId());
+            await TranslateExceptionIfFail(async () => { await _chatService.MarkReadBulk(ctx, timestamp); });
         }
 
         public async Task Received(string chatId, DateTime timestamp)
         {
             var ctx = AuthContext;
-            _log.Info(() => $"Received(chatId:{chatId}, timestamp:{timestamp}) [{ctx.GetUserId()}]");
-            await TranslateExceptionIfFail(async () =>
-            {
-                await _chatService.MarkDelivered(ctx, chatId, timestamp);
-            });
+            _log.LogInformation("Received(chatId:{chat_id}, timestamp:{timestamp}) [{user_id}]", chatId, timestamp,
+                ctx.GetUserId());
+            await TranslateExceptionIfFail(async () => { await _chatService.MarkDelivered(ctx, chatId, timestamp); });
         }
 
         public async Task AddParticipants(string chatId, AddParticipantsCommand participants)
         {
             var ctx = AuthContext;
-            _log.Info(() => $"AddParticipants(chatId:{chatId}) [{ctx.GetUserId()}]");
-            _log.Debug(() => $"Participants: {JsonConvert.SerializeObject(participants, Formatting.Indented)}");
+            _log.LogInformation("AddParticipants(chatId:{chat_id}) [{user_id}]", chatId, ctx.GetUserId());
             await TranslateExceptionIfFail(async () =>
             {
                 Validate.NotNull(participants);
@@ -207,29 +183,29 @@ namespace Cactus.Chat.Signalr
         public async Task StartTyping(string chatId)
         {
             var ctx = AuthContext;
-            _log.Info(() => $"StartTyping(chatId:{chatId}) [{ctx.GetUserId()}]");
+            _log.LogInformation("StartTyping(chatId:{chat_id}) [{user_id}]", chatId, ctx.GetUserId());
             var userId = AuthContext.GetUserId();
-            await _bus.FireEvent(new ParticipantStartTyping { ChatId = chatId, UserId = userId, ConnectionId = ctx.ConnectionId });
+            await _bus.FireEvent(new ParticipantStartTyping
+                {ChatId = chatId, UserId = userId, ConnectionId = ctx.ConnectionId});
         }
 
         public async Task StopTyping(string chatId)
         {
             var ctx = AuthContext;
-            _log.Info(() => $"AddParticipants(chatId:{chatId}) [{ctx.GetUserId()}]");
+            _log.LogInformation("AddParticipants(chatId:{chat_id}) [{user_id}]", chatId, ctx.GetUserId());
             var userId = AuthContext.GetUserId();
-            await _bus.FireEvent(new ParticipantStopTyping { ChatId = chatId, UserId = userId, ConnectionId = ctx.ConnectionId });
+            await _bus.FireEvent(new ParticipantStopTyping
+                {ChatId = chatId, UserId = userId, ConnectionId = ctx.ConnectionId});
         }
 
         public Task<IEnumerable<string>> GetContactsOnline()
         {
             var ctx = AuthContext;
-            _log.Info(() => $"GetContactsOnline() [{ctx.GetUserId()}]");
+            _log.LogInformation("GetContactsOnline() [{user_id}]", ctx.GetUserId());
             var res = _connectionStorage.ToEnumerable()
                 .Where(e => e.BroadcastGroup == GetBroadcastGroup(ctx.Identity as IIdentity))
                 .Select(e => e.UserId)
                 .Distinct();
-
-            _log.Debug(() => "Result: " + res.Aggregate((current, next) => current + ", " + next));
             return Task.FromResult(res);
         }
 
@@ -237,13 +213,14 @@ namespace Cactus.Chat.Signalr
         {
             var ctx = AuthContext;
             var userId = ctx.GetUserId();
-            _log.Info(() => $"OnConnected() [{ConnectionId} : {userId}]");
+            _log.LogInformation("OnConnected() [{user_id}]", ctx.GetUserId());
             var broadcastGroup = BroadcastGroup;
             var connection = new ConnectionInfo(ConnectionId, userId, broadcastGroup,
-                new ClientEndpoint<T4>(HubContext, ConnectionId));
+                new ClientEndpoint<T4>(HubContext, ConnectionId, _log));
             _connectionStorage.Add(connection);
-            await _bus.FireEvent(new UserConnected { ConnectionId = ConnectionId, UserId = userId, BroadcastGroup = broadcastGroup });
-            _log.DebugFormat("User {0} has been connected successfully", userId);
+            await _bus.FireEvent(new UserConnected
+                {ConnectionId = ConnectionId, UserId = userId, BroadcastGroup = broadcastGroup});
+            _log.LogDebug("User {user_id} has been connected successfully", userId);
             await base.OnConnectedAsync();
         }
 
@@ -251,10 +228,13 @@ namespace Cactus.Chat.Signalr
         {
             var ctx = AuthContext;
             var userId = ctx.GetUserId();
-            _log.Info(() => $"OnDisconnected [{ConnectionId} : {userId}], exception:{exception})");
+            _log.LogInformation("OnDisconnected [{connection_id} : {user_id}], exception:{exception})", ConnectionId,
+                userId, exception);
             var info = _connectionStorage.Delete(ConnectionId);
-            await _bus.FireEvent(new UserDisconnected { ConnectionId = info?.Id, UserId = userId, BroadcastGroup = info?.BroadcastGroup });
-            _log.InfoFormat("User disconnected successfully {0} : {1} / {2}", info?.Id, userId, info?.BroadcastGroup);
+            await _bus.FireEvent(new UserDisconnected
+                {ConnectionId = info?.Id, UserId = userId, BroadcastGroup = info?.BroadcastGroup});
+            _log.LogInformation("User disconnected successfully {connection_id} : {user_id} / {broadcast_group}",
+                info?.Id, userId, info?.BroadcastGroup);
             await base.OnDisconnectedAsync(exception);
         }
 
@@ -301,7 +281,7 @@ namespace Cactus.Chat.Signalr
             }
             catch (Exception ex)
             {
-                _log.Error(ex.ToString);
+                _log.LogError(ex.ToString());
                 throw BuildException(ex);
             }
         }
@@ -314,14 +294,13 @@ namespace Cactus.Chat.Signalr
             }
             catch (Exception ex)
             {
-                _log.Error(ex.ToString);
+                _log.LogError(ex.ToString());
                 throw BuildException(ex);
             }
         }
 
         protected virtual Exception BuildException(Exception input)
         {
-
             return new ErrorInfo(input.Message, 0xDEAD);
         }
 

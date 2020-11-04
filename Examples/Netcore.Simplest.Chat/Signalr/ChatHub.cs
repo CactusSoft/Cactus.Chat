@@ -4,9 +4,9 @@ using Cactus.Chat.Core;
 using Cactus.Chat.External;
 using Cactus.Chat.Model;
 using Cactus.Chat.Signalr;
-using Cactus.Chat.Signalr.Connections;
 using log4net;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using Netcore.Simplest.Chat.Integration;
 using Netcore.Simplest.Chat.Models;
 
@@ -16,8 +16,10 @@ namespace Netcore.Simplest.Chat.Signalr
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(ChatHub));
 
-        public ChatHub(IChatService<Chat<CustomIm, CustomProfile>, CustomIm, CustomProfile> chatService, IConnectionStorage connectionStorage, IEventHub bus, IHubContext<Hub> hubContext, IHubContext<ChatHub> hubContext2)
-            : base(chatService, connectionStorage, bus)
+        public ChatHub(IChatService<Chat<CustomIm, CustomProfile>, CustomIm, CustomProfile> chatService,
+            IConnectionStorage connectionStorage, IEventHub bus, IHubContext<Hub> hubContext,
+            IHubContext<ChatHub> hubContext2, ILogger<ChatHub> log)
+            : base(chatService, connectionStorage, bus, log)
         {
             HubContext = hubContext2;
         }

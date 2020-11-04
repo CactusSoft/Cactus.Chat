@@ -2,9 +2,9 @@
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
-using Cactus.Chat.Logging;
 using Cactus.Chat.Transport;
 using Cactus.Chat.WebSockets.Endpoints;
+using Microsoft.Extensions.Logging;
 using StreamJsonRpc;
 
 namespace Cactus.Chat.WebSockets.Connections
@@ -14,13 +14,16 @@ namespace Cactus.Chat.WebSockets.Connections
     /// </summary>
     public class ChatConnection : IChatConnection
     {
-        private static readonly ILog Log = LogProvider.GetLogger(typeof(ChatConnection));
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly ILogger<ChatConnection> _log;
         private readonly IJrpcWebSocket _socket;
         protected JsonRpc JsonRpc;
 
-        public ChatConnection(string connectionId, string userId, string broadcastGroup, WebSocket socket)
+        public ChatConnection(string connectionId, string userId, string broadcastGroup, WebSocket socket, ILoggerFactory loggerFactory)
         {
-            _socket = new JrpcWebSocket(socket);
+            _loggerFactory = loggerFactory;
+            _log = loggerFactory.CreateLogger<ChatConnection>();
+            _socket = new JrpcWebSocket(socket,loggerFactory.CreateLogger<JrpcWebSocket>());
             Id = connectionId ?? throw new ArgumentException("connectionId");
             UserId = userId ?? throw new ArgumentException("userId");
             BroadcastGroup = broadcastGroup;
@@ -39,17 +42,17 @@ namespace Cactus.Chat.WebSockets.Connections
         {
             if (JsonRpc == null)
             {
-                Log.Debug("Init JsonRPC channel...");
+                _log.LogDebug("Init JsonRPC channel...");
                 JsonRpc = new JsonRpc(_socket, target);
             }
             else
                 throw new InvalidOperationException("JsonRPC has been already initiated. Calling StartListening twice is not an option.");
 
-            Log.DebugFormat("Start listening {0}/{1}", Id, UserId);
+            _log.LogDebug("Start listening {connection_id}/{user_id}", Id, UserId);
             try
             {
                 JsonRpc.StartListening();
-                Client = new ChatClientEndpoint(JsonRpc);
+                Client = new ChatClientEndpoint(JsonRpc,_loggerFactory.CreateLogger<ChatClientEndpoint>());
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     if (await Task.WhenAny(JsonRpc.Completion, Task.Delay(3000, cancellationToken)) ==
@@ -69,13 +72,13 @@ namespace Cactus.Chat.WebSockets.Connections
             if (cancellationToken.IsCancellationRequested && !JsonRpc.Completion.IsCompleted)
             {
                 //The listening has been cancelled outside. Do graceful shutdown?
-                Log.DebugFormat("Listening stopped by outside cancellation request, {0}/{1}", Id, UserId);
+                _log.LogDebug("Listening stopped by outside cancellation request, {connection_id}/{user_id}", Id, UserId);
             }
             else
             {
-                Log.DebugFormat("Listening stopped by JsonRpc.Completion signal, {0}/{1}", Id, UserId);
+                _log.LogDebug("Listening stopped by JsonRpc.Completion signal, {connection_id}/{user_id}", Id, UserId);
                 if (JsonRpc.Completion.Exception != null)
-                    Log.WarnFormat("JsonRpc.Completion exception: {0}", JsonRpc.Completion.Exception);
+                    _log.LogWarning("JsonRpc.Completion exception: {exception}", JsonRpc.Completion.Exception);
             }
 
             JsonRpc = null;

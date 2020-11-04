@@ -14,13 +14,13 @@ namespace Cactus.Chat.Storage
         where T2 : InstantMessage, new()
         where T3 : IChatProfile, new()
     {
-
         private static readonly IList<T1> ChatList = new List<T1>();
 
         public Task<IEnumerable<T1>> GetUserChatList(string userId, Expression<Func<T1, bool>> filter = null)
         {
             var userChats = ChatList
-                .Where(e => e.Participants != null && e.Participants.Any(p => p.Id == userId && !p.HasLeft && !p.IsDeleted));
+                .Where(e => e.Participants != null &&
+                            e.Participants.Any(p => p.Id == userId && !p.HasLeft && !p.IsDeleted));
             if (filter != null)
                 userChats = userChats.Where(filter.Compile());
             return Task.FromResult(userChats.Select(Copy));
@@ -55,7 +55,7 @@ namespace Cactus.Chat.Storage
                 throw new ArgumentException("chatId");
             if (chat.Messages == null)
                 chat.Messages = new List<T2>();
-            chat.Messages.Add(Copy((T2)msg));
+            chat.Messages.Add(Copy(msg));
             return Task.FromResult(0);
         }
 
@@ -138,6 +138,7 @@ namespace Cactus.Chat.Storage
                 if (participant != null)
                     participant.IsDeleted = isDeleted;
             }
+
             return Task.FromResult(0);
         }
 
@@ -176,12 +177,14 @@ namespace Cactus.Chat.Storage
                 if (participant != null)
                     participant.Profile = profile;
             }
+
             return Task.FromResult(0);
         }
 
         public Task<string> GetInfo()
         {
-            return Task.FromResult($"InMemory, assembly version {Assembly.GetExecutingAssembly().GetName().Version.ToString(3)}");
+            return Task.FromResult(
+                $"InMemory, assembly version {Assembly.GetExecutingAssembly().GetName().Version.ToString(3)}");
         }
 
         private ChatParticipant<T3> Copy(ChatParticipant<T3> e)
@@ -206,17 +209,17 @@ namespace Cactus.Chat.Storage
             return new T2
             {
                 Message = e.Message,
-                File = Copy(e.File),
+                Attachments = e.Attachments?.Select(Copy).ToArray(),
                 Author = e.Author,
                 Timestamp = e.Timestamp
             };
         }
 
-        private ChatFile Copy(ChatFile e)
+        private Attachment Copy(Attachment e)
         {
             if (e == null)
                 return null;
-            return new ChatFile { Name = e.Name, IconUrl = e.IconUrl, Size = e.Size, Url = e.Url, Type = e.Type};
+            return new Attachment {Name = e.Name, IconUrl = e.IconUrl, Size = e.Size, Url = e.Url, Type = e.Type};
         }
 
         private T1 Copy(T1 e)

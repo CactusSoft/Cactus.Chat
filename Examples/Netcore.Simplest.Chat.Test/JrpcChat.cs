@@ -9,6 +9,7 @@ using Cactus.Chat.Model;
 using Cactus.Chat.Transport.Models.Input;
 using Cactus.Chat.Transport.Models.Output;
 using Cactus.Chat.WebSockets;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Netcore.Simplest.Chat.Models;
 using Newtonsoft.Json.Linq;
@@ -26,7 +27,8 @@ namespace Netcore.Simplest.Chat.Test
 
         public Auth Auth { get; protected set; }
 
-        protected JrpcChat(Auth auth, JrpcWebSocket jrpcSocket, StackChatClientEndpoint clientEndpoint, JsonRpc rpcGateway)
+        protected JrpcChat(Auth auth, JrpcWebSocket jrpcSocket, StackChatClientEndpoint clientEndpoint,
+            JsonRpc rpcGateway)
         {
             Auth = auth;
             _jrpcSocket = jrpcSocket;
@@ -40,7 +42,7 @@ namespace Netcore.Simplest.Chat.Test
             var wsClient = new ClientWebSocket();
             await wsClient.ConnectAsync(wsEndpoint, CancellationToken.None);
             var target = new StackChatClientEndpoint();
-            var jrpcWs = new JrpcWebSocket(wsClient);
+            var jrpcWs = new JrpcWebSocket(wsClient, new NullLogger<JrpcWebSocket>());
             var rpc = new JsonRpc(jrpcWs, target);
             rpc.StartListening();
             rpc.TraceSource.Switch.Level = System.Diagnostics.SourceLevels.All;
@@ -63,7 +65,8 @@ namespace Netcore.Simplest.Chat.Test
             _rpc?.Dispose();
         }
 
-        public async Task<ChatSummary<CustomIm, CustomProfile>> StartChat(string title = null, params string[] participants)
+        public async Task<ChatSummary<CustomIm, CustomProfile>> StartChat(string title = null,
+            params string[] participants)
         {
             Assert.IsNotNull(participants);
             Assert.AreNotEqual(0, participants.Length);
@@ -71,7 +74,7 @@ namespace Netcore.Simplest.Chat.Test
                 new Chat<CustomIm, CustomProfile>
                 {
                     Title = title,
-                    Participants = participants.Select(e => new ChatParticipant<CustomProfile> { Id = e }).ToList()
+                    Participants = participants.Select(e => new ChatParticipant<CustomProfile> {Id = e}).ToList()
                 }
             );
         }
@@ -101,7 +104,8 @@ namespace Netcore.Simplest.Chat.Test
             DateTime? to = null, int count = -1, bool moveBackward = false)
         {
             Assert.IsNotNull(chatId);
-            return await _rpc.InvokeAsync<IEnumerable<InstantMessage>>("GetMessages", chatId, from, to, count, moveBackward);
+            return await _rpc.InvokeAsync<IEnumerable<InstantMessage>>("GetMessages", chatId, from, to, count,
+                moveBackward);
         }
 
         public async Task AddParticipants(string chatId, params string[] users)
@@ -115,7 +119,7 @@ namespace Netcore.Simplest.Chat.Test
             });
         }
 
-        public async Task<ChatSummary<CustomIm,CustomProfile>> GetChat(string chatId)
+        public async Task<ChatSummary<CustomIm, CustomProfile>> GetChat(string chatId)
         {
             Assert.IsNotNull(chatId);
             return await _rpc.InvokeAsync<ChatSummary<CustomIm, CustomProfile>>("GetChat", chatId);

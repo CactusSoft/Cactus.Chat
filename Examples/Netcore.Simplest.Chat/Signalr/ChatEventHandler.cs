@@ -5,6 +5,7 @@ using Cactus.Chat.Events;
 using Cactus.Chat.External;
 using Cactus.Chat.Model;
 using Cactus.Chat.Signalr;
+using Microsoft.Extensions.Logging;
 using Netcore.Simplest.Chat.Models;
 
 namespace Netcore.Simplest.Chat.Signalr
@@ -21,11 +22,10 @@ namespace Netcore.Simplest.Chat.Signalr
         IEventHandler<UserConnected>,
         IEventHandler<UserDisconnected>
     {
-
-        public ChatEventHandler(IChatService<Chat<CustomIm, CustomProfile>, CustomIm, CustomProfile> chatService, IEventHub bus, IConnectionStorage connectionStorage)
-            : base(chatService, bus, connectionStorage)
+        public ChatEventHandler(IChatService<Chat<CustomIm, CustomProfile>, CustomIm, CustomProfile> chatService,
+            IEventHub bus, IConnectionStorage connectionStorage, ILogger<ChatEventHandler> log)
+            : base(chatService, bus, connectionStorage, log)
         {
-
         }
     }
 }

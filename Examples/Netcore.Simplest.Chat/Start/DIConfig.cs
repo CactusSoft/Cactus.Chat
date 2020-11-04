@@ -6,6 +6,7 @@ using Cactus.Chat.Connection;
 using Cactus.Chat.Core;
 using Cactus.Chat.External;
 using Cactus.Chat.Model;
+using Cactus.Chat.Mongo;
 using Cactus.Chat.Storage;
 using Microsoft.AspNetCore.SignalR;
 using MongoDB.Driver;

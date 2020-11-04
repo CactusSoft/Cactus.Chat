@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -7,10 +6,9 @@ using Cactus.Chat.Connection;
 using Cactus.Chat.Core;
 using Cactus.Chat.Events;
 using Cactus.Chat.External;
-using Cactus.Chat.Logging;
 using Cactus.Chat.Model;
 using Cactus.Chat.Model.Base;
-using Newtonsoft.Json;
+using Microsoft.Extensions.Logging;
 
 
 namespace Cactus.Chat.Signalr
@@ -20,33 +18,35 @@ namespace Cactus.Chat.Signalr
         where T2 : InstantMessage
         where T3 : IChatProfile
     {
-        private readonly ILog _log = LogProvider.GetLogger("Cactus.Chat.Signalr.AbstractEventHandler");
         private readonly IChatService<T1, T2, T3> _chatService;
         private readonly IEventHub _bus;
         private readonly IConnectionStorage _connectionStorage;
+        private readonly ILogger _log;
 
-        protected AbstractEventHandler(IChatService<T1, T2, T3> chatService, IEventHub bus, IConnectionStorage connectionStorage)
+        protected AbstractEventHandler(IChatService<T1, T2, T3> chatService, IEventHub bus,
+            IConnectionStorage connectionStorage, ILogger log)
         {
             _chatService = chatService;
             _bus = bus;
             _connectionStorage = connectionStorage;
+            _log = log;
         }
 
         public async Task Handle(MessageRead message)
         {
-            _log.Debug(() => $"MessageRead handler:{Environment.NewLine} {JsonConvert.SerializeObject(message, Formatting.Indented)}");
+            _log.LogDebug("Handle {message}",message.GetType().Name);
             await Task.WhenAll((await GetConnected(message)).Select(e => e.Client.MessageRead(message)));
         }
 
         public async Task Handle(MessageDelivered message)
         {
-            _log.Debug(() => $"MessageDelivered handler:{Environment.NewLine} {JsonConvert.SerializeObject(message, Formatting.Indented)}");
+            _log.LogDebug("Handle {message}",message.GetType().Name);
             await Task.WhenAll((await GetConnected(message)).Select(e => e.Client.MessageDelivered(message)));
         }
 
         public async Task Handle(MessageNew<T2> message)
         {
-            _log.Debug(() => $"NewMessage handler:{Environment.NewLine} {JsonConvert.SerializeObject(message, Formatting.Indented)}");
+            _log.LogDebug("Handle {message}",message.GetType().Name);
             var chatParticipants = await _chatService.GetParticipants(message.ChatId);
             var activeParticipants = chatParticipants.Where(p => !p.HasLeft && !p.IsDeleted);
             var connectedClients = _connectionStorage.ToEnumerable()
@@ -54,10 +54,11 @@ namespace Cactus.Chat.Signalr
                 .Where(e => e.Id != message.ConnectionId)
                 .ToList();
 
-            _log.DebugFormat("{0} participants, {1} clients connected", chatParticipants.Count, connectedClients.Count);
+            _log.LogDebug("{user_count} participants, {connection_count} clients connected", chatParticipants.Count, connectedClients.Count);
             if (connectedClients.Count > 0)
             {
-                await Task.WhenAll((await GetConnected(message)).Select(e => e.Client.MessageNew(message.ChatId, message.Payload)));
+                await Task.WhenAll((await GetConnected(message)).Select(e =>
+                    e.Client.MessageNew(message.ChatId, message.Payload)));
             }
 
             // Notify all disconnected clients
@@ -75,39 +76,41 @@ namespace Cactus.Chat.Signalr
 
         public async Task Handle(ParticipantAdded<T3> message)
         {
-            _log.Debug(() => $"ParticipantAdded handler:{Environment.NewLine} {JsonConvert.SerializeObject(message, Formatting.Indented)}");
+            _log.LogDebug("Handle {message}",message.GetType().Name);
             await Task.WhenAll(
                 (await GetConnected(message))
-                .Select(e => e.Client.ParticipantAdded(message.ChatId, message.UserId, message.Participant.Id, message.Participant.Profile)));
+                .Select(e => e.Client.ParticipantAdded(message.ChatId, message.UserId, message.Participant.Id,
+                    message.Participant.Profile)));
         }
 
         public async Task Handle(ParticipantLeftChat message)
         {
-            _log.Debug(() => $"ParticipantLeftChat handler:{Environment.NewLine} {JsonConvert.SerializeObject(message, Formatting.Indented)}");
+            _log.LogDebug("Handle {message}",message.GetType().Name);
             await Task.WhenAll((await GetConnected(message)).Select(e => e.Client.ParticipantLeft(message)));
         }
 
         public async Task Handle(ParticipantStartTyping message)
         {
-            _log.Debug(() => $"ParticipantStartTyping handler:{Environment.NewLine} {JsonConvert.SerializeObject(message, Formatting.Indented)}");
+            _log.LogDebug("Handle {message}",message.GetType().Name);
             await Task.WhenAll((await GetConnected(message)).Select(e => e.Client.ParticipantStartTyping(message)));
         }
 
         public async Task Handle(ParticipantStopTyping message)
         {
-            _log.Debug(() => $"ParticipantStopTyping handler:{Environment.NewLine} {JsonConvert.SerializeObject(message, Formatting.Indented)}");
+            _log.LogDebug("Handle {message}",message.GetType().Name);
             await Task.WhenAll((await GetConnected(message)).Select(e => e.Client.ParticipantStopTyping(message)));
         }
 
         public async Task Handle(ChatTitleUpdated message)
         {
-            _log.Debug(() => $"ChatTitleUpdated handler:{Environment.NewLine} {JsonConvert.SerializeObject(message, Formatting.Indented)}");
-            await Task.WhenAll((await GetConnected(message)).Select(e => e.Client.ChatTitleChanged(message.ChatId, message.UserId, message.Title)));
+            _log.LogDebug("Handle {message}",message.GetType().Name);
+            await Task.WhenAll((await GetConnected(message)).Select(e =>
+                e.Client.ChatTitleChanged(message.ChatId, message.UserId, message.Title)));
         }
 
         public async Task Handle(UserConnected message)
         {
-            _log.Debug(() => $"UserOnline handler:{Environment.NewLine} {JsonConvert.SerializeObject(message, Formatting.Indented)}");
+            _log.LogDebug("Handle {message}",message.GetType().Name);
             if (message.BroadcastGroup != null)
             {
                 await _connectionStorage.ToEnumerable()
@@ -119,10 +122,10 @@ namespace Cactus.Chat.Signalr
 
         public async Task Handle(UserDisconnected message)
         {
-            _log.Debug(() => $"UserOffline handler:{Environment.NewLine} {JsonConvert.SerializeObject(message, Formatting.Indented)}");
+            _log.LogDebug("Handle {message}",message.GetType().Name);
             if (message.ConnectionId == null)
             {
-                _log.Warn("Unable to disconnect the right way, connectionId not found in storage");
+                _log.LogWarning("Unable to disconnect the right way, connectionId not found in storage");
                 return;
             }
 
@@ -131,17 +134,17 @@ namespace Cactus.Chat.Signalr
             {
                 if (message.BroadcastGroup != null)
                 {
-                    _log.InfoFormat("Notify '{0}' group about the disconnect", message.BroadcastGroup);
+                    _log.LogInformation("Notify '{broadcast_group}' group about the disconnect", message.BroadcastGroup);
                     await _connectionStorage.ToEnumerable()
                         .Where(e => e.UserId != message.UserId && e.BroadcastGroup == message.BroadcastGroup)
                         .Select(e => e.Client.UserDisconnected(message.UserId))
                         .WhenAll();
                 }
                 else
-                    _log.Debug("None notified about the disconnect because the user has no broadcast group");
+                    _log.LogDebug("None notified about the disconnect because the user has no broadcast group");
             }
             else
-                _log.Debug("None notified about the disconnect because the user is still connected with other device");
+                _log.LogDebug("None notified about the disconnect because the user is still connected with other device");
         }
 
         protected async Task<IEnumerable<IConnectionInfo>> GetConnected(IParticipantIdentifier message)
@@ -151,7 +154,7 @@ namespace Cactus.Chat.Signalr
                 .Where(e => chatParticipants.Any(p => p.Id == e.UserId))
                 .Where(e => e.Id != message.ConnectionId);
 
-            if (_log.IsDebugEnabled())
+            if (_log.IsEnabled(LogLevel.Debug))
             {
                 var list = connected.ToList();
                 var x = new StringBuilder();
@@ -170,6 +173,7 @@ namespace Cactus.Chat.Signalr
                         x.Append(e.BroadcastGroup);
                     });
                 }
+
                 return list;
             }
 

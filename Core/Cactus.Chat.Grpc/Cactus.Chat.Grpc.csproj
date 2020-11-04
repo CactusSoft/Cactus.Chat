@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Grpc.AspNetCore" Version="2.33.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Cactus.Chat.Connection\Cactus.Chat.Connection.csproj" />
+      <ProjectReference Include="..\Cactus.Chat.Transport\Cactus.Chat.Transport.csproj" />
+    </ItemGroup>
+    
+    <ItemGroup>
+        <Protobuf Include="Protos\chat.proto" GrpcServices="Server" />
+    </ItemGroup>
+
+</Project>
