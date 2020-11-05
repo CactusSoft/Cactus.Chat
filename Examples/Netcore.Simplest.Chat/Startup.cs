@@ -1,14 +1,7 @@
 ﻿using System;
-using System.Text.Json;
-using System.Threading;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
-using Cactus.Chat.Connection;
-using Cactus.Chat.Core;
-using Cactus.Chat.External;
 using Cactus.Chat.Grpc;
-using Cactus.Chat.Model;
-using Cactus.Chat.WebSockets.Connections;
 using Cactus.TimmyAuth;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
@@ -18,15 +11,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Netcore.Simplest.Chat.Integration;
-using Netcore.Simplest.Chat.Models;
 using Netcore.Simplest.Chat.Signalr;
 using Netcore.Simplest.Chat.Start;
 using Netcore.Simplest.Chat.WebSockets;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using UserConnected = Cactus.Chat.Events.UserConnected;
-using UserDisconnected = Cactus.Chat.Events.UserDisconnected;
 
 namespace Netcore.Simplest.Chat
 {
@@ -95,77 +84,13 @@ namespace Netcore.Simplest.Chat
                     await context.AuthenticateAsync();
                     await func();
                 })
-//                 .Map("/ws", b => b
-//                     .UseWebSockets()
-//                     .Run(async ctx =>
-//                     {
-//                         _log.LogDebug("Someone knocked to /ws endpoint...");
-//                         if (!ctx.User.Identity.IsAuthenticated)
-//                         {
-//                             _log.LogWarning("Unauthenticated request, return HTTP 401");
-//                             ctx.Response.StatusCode = 401;
-//                             return;
-//                         }
-//
-//                         if (!ctx.WebSockets.IsWebSocketRequest)
-//                         {
-//                             _log.LogWarning("Not a WebSocket request, return HTTP 400");
-//                             ctx.Response.StatusCode = 400;
-//                             return;
-//                         }
-//
-//                         var connectionId = Guid.NewGuid().ToString("N");
-//                         var auth = new AuthContext(ctx.User.Identity) {ConnectionId = connectionId};
-//                         var userId = auth.GetUserId();
-//                         _log.LogDebug("Income connection: {0}/{1}", connectionId, userId);
-//                         var eventHub = b.ApplicationServices.GetRequiredService<IEventHub>();
-//                         var connectionStorage = b.ApplicationServices.GetRequiredService<IConnectionStorage>();
-//                         var chatService = b.ApplicationServices
-//                             .GetRequiredService<IChatService<Chat<CustomIm, CustomProfile>, CustomIm, CustomProfile>>();
-//                         var broadcastGroup = "*";
-//                         var broadcastDelimeterIndex = userId.IndexOf('@');
-//                         if (broadcastDelimeterIndex > 0 && broadcastDelimeterIndex < userId.Length)
-//                             broadcastGroup = userId.Substring(broadcastDelimeterIndex + 1);
-//                         _log.LogDebug("Broadcast group: {0}", broadcastGroup);
-//                         var socket = await ctx.WebSockets.AcceptWebSocketAsync();
-//                         using (var chatConnection =
-//                             new ChatConnection(connectionId, auth.GetUserId(), broadcastGroup, socket))
-//                         {
-//                             //TODO broadcast userConnected/userDisconnected
-//                             connectionStorage.Add(chatConnection);
-//                             var listenTask = chatConnection.ListenAsync(
-//                                 new JrpcChatServerEndpoint(chatService, auth, connectionStorage),
-//                                 CancellationToken.None);
-//
-//                             _log.LogDebug("{0}/{1} connected, send UserConnected broadcast", connectionId, userId);
-//
-//
-// #pragma warning disable 4014
-//                             //DO NOT await it
-//                             eventHub.FireEvent(new UserConnected
-//                             {
-//                                 BroadcastGroup = broadcastGroup,
-//                                 ConnectionId = connectionId,
-//                                 UserId = auth.GetUserId()
-//                             });
-// #pragma warning restore 4014
-//
-//
-//                             await listenTask;
-//                             connectionStorage.Delete(connectionId);
-//                             _log.LogDebug("Connection {0}/{1} is closed, send UserDisconnected broadcast", connectionId,
-//                                 userId);
-//                             await eventHub.FireEvent(new UserDisconnected
-//                             {
-//                                 BroadcastGroup = broadcastGroup,
-//                                 ConnectionId = connectionId,
-//                                 UserId = auth.GetUserId()
-//                             });
-//                         }
-//                     }))
-                // .Map("/sr", b => b
-                //     .UseSignalR(routes => { routes.MapHub<ChatHub>(""); })
-                // )
+                .Map("/ws", b => b
+                    .UseWebSockets()
+                    .UseMiddleware<WsConnectionMiddleware>()
+                )
+                .Map("/sr", b => b
+                    .UseSignalR(routes => { routes.MapHub<ChatHub>(""); })
+                )
                 .UseRouting()
                 .UseEndpoints(endpoints =>
                 {

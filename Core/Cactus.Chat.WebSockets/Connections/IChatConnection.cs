@@ -9,7 +9,7 @@ namespace Cactus.Chat.WebSockets.Connections
 {
     public interface IChatConnection : IConnectionInfo, IDisposable
     {
-        Task ListenAsync(object target, CancellationToken cancellationToken);
+        Task ListenAsync(CancellationToken cancellationToken);
     }
 
     public interface IChatConnectionFactory

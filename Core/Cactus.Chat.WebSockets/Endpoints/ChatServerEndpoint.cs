@@ -102,7 +102,7 @@ namespace Cactus.Chat.WebSockets.Endpoints
 
         public async Task<ChatSummary<T2, T3>> GetChat(string id)
         {
-            _log.LogInformation("GetChat(id:{id}) [{user_id}]", _authContext.GetUserId());
+            _log.LogInformation("GetChat(id:{id}) [{user_id}]", id, _authContext.GetUserId());
             var res = await _chatService.Get(_authContext, id);
             var dto = BuildChatDto(res, _authContext.GetUserId());
             return dto;
