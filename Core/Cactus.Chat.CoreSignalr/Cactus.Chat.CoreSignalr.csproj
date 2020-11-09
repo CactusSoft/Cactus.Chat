@@ -7,6 +7,10 @@
     <ProjectGuid>{389A84BC-04BC-4959-8422-6C1BAD871CDE}</ProjectGuid>
     <LangVersion>9</LangVersion>
     <RepositoryUrl>https://github.com/CactusSoft/Cactus.Chat</RepositoryUrl>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageVersion>3.0</PackageVersion>
+    <Copyright>CactusSoft LLC</Copyright>
+    <PackageProjectUrl>https://github.com/CactusSoft/Cactus.Chat</PackageProjectUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

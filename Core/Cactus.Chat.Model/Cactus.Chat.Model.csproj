@@ -6,9 +6,9 @@
     <RootNamespace>Cactus.Chat.Model</RootNamespace>
     <Company>CactusSoft LLC</Company>
     <Product>Cactus.Chat</Product>
-    <Authors>Cactus.Chat.Model</Authors>
+    <Authors>YanO</Authors>
     <Copyright>CactusSoft LLC</Copyright>
-    <PackageProjectUrl>https://gitlab.cactussoft.biz/int/chat/backend</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/CactusSoft/Cactus.Chat</PackageProjectUrl>
     <Version>2.0.9</Version>
     <Description>Chat domain model</Description>
     <PackageIconUrl></PackageIconUrl>
@@ -20,6 +20,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <RepositoryUrl>https://github.com/CactusSoft/Cactus.Chat</RepositoryUrl>
     <LangVersion>9</LangVersion>
+    <PackageVersion>3.0</PackageVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

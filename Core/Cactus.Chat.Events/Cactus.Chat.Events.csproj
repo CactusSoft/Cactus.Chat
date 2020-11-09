@@ -6,7 +6,7 @@
     <Product>Cactus.Chat</Product>
     <Authors>YanO</Authors>
     <Copyright>CactusSoft LLC</Copyright>
-    <PackageProjectUrl>https://gitlab.cactussoft.biz/int/chat/backend</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/CactusSoft/Cactus.Chat</PackageProjectUrl>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Version>2.0.9</Version>
     <Description>Event models that chat core fires and handle</Description>
@@ -14,6 +14,7 @@
     <ProjectGuid>{9FC71318-BE39-4275-983D-ED05CFA1F65D}</ProjectGuid>
     <LangVersion>9</LangVersion>
     <RepositoryUrl>https://github.com/CactusSoft/Cactus.Chat</RepositoryUrl>
+    <PackageVersion>3.0</PackageVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

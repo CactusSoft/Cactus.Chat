@@ -6,7 +6,7 @@
     <Product>Cactus.Chat</Product>
     <Authors>YanO</Authors>
     <Copyright>CactusSoft LLC</Copyright>
-    <PackageProjectUrl>https://gitlab.cactussoft.biz/int/chat/backend</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/CactusSoft/Cactus.Chat</PackageProjectUrl>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Version>2.0.11</Version>
     <Description>MongoDB storage implementation</Description>
@@ -17,6 +17,7 @@
     <FileVersion>2.0.11.0</FileVersion>
     <RepositoryUrl>https://github.com/CactusSoft/Cactus.Chat</RepositoryUrl>
     <LangVersion>9</LangVersion>
+    <PackageVersion>3.0</PackageVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

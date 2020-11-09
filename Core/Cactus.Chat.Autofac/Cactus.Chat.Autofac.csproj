@@ -14,6 +14,8 @@
     <FileVersion>2.0.1.0</FileVersion>
     <LangVersion>9</LangVersion>
     <RepositoryUrl>https://github.com/CactusSoft/Cactus.Chat</RepositoryUrl>
+    <PackageVersion>3.0</PackageVersion>
+    <Authors>YanO</Authors>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

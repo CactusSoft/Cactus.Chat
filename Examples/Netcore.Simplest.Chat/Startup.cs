@@ -1,7 +1,6 @@
 ﻿using System;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
-using Cactus.Chat.Grpc;
 using Cactus.TimmyAuth;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
@@ -36,7 +35,6 @@ namespace Netcore.Simplest.Chat
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             _log.LogInformation("ConfigureServices...");
-            services.AddGrpc();
             services.AddControllers();
             services
                 .AddSignalR()
@@ -94,8 +92,7 @@ namespace Netcore.Simplest.Chat
                 .UseRouting()
                 .UseEndpoints(endpoints =>
                 {
-                    //endpoints.MapControllers();
-                    endpoints.MapGrpcService<ChatCallbackService>();
+                    endpoints.MapControllers();
                 })
                 .Run(async ctx =>
                 {

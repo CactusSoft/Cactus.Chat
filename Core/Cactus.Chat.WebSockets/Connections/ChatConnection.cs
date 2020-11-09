@@ -27,8 +27,8 @@ namespace Cactus.Chat.WebSockets.Connections
             object messageTarget,
             ILoggerFactory loggerFactory)
         {
-            Id = connectionId ?? throw new ArgumentException("connectionId");
-            UserId = userId ?? throw new ArgumentException("userId");
+            Id = connectionId ?? throw new ArgumentException(nameof(connectionId));
+            UserId = userId ?? throw new ArgumentException(nameof(userId));
             _messageTarget = messageTarget;
             _loggerFactory = loggerFactory;
             _log = loggerFactory.CreateLogger<ChatConnection>();

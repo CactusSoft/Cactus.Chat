@@ -25,7 +25,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Cactus.Chat.Autofac\Cactus.Chat.Autofac.csproj" />
     <ProjectReference Include="..\..\Core\Cactus.Chat.CoreSignalr\Cactus.Chat.CoreSignalr.csproj" />
-    <ProjectReference Include="..\..\Core\Cactus.Chat.Grpc\Cactus.Chat.Grpc.csproj" />
     <ProjectReference Include="..\..\Core\Cactus.Chat.Mongo\Cactus.Chat.Mongo.csproj" />
     <ProjectReference Include="..\..\Core\Cactus.Chat.WebSockets\Cactus.Chat.WebSockets.csproj" />
   </ItemGroup>
