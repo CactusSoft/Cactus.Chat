@@ -14,6 +14,8 @@ namespace Cactus.Chat.Model
         /// User identifier
         /// </summary>
         public string Author { get; set; }
+        
+        public MessageType Type { get; set; }
 
         /// <summary>
         /// Message text. Optional if File is specified
@@ -24,6 +26,12 @@ namespace Cactus.Chat.Model
         /// Message attachments
         /// </summary>
         public ICollection<Attachment> Attachments { get; set; }
+    }
+
+    public enum MessageType
+    {
+        Regular,
+        System
     }
 
     public class Attachment

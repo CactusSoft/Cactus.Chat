@@ -13,7 +13,11 @@ namespace Cactus.Chat.Model
         public DateTime? ReadOn { get; set; }
 
         public DateTime? DeliveredOn { get; set; }
+        
+        public DateTime? LastMessageOn { get; set; }
 
+        public bool IsMuted { get; set; }
+        
         public bool IsDeleted { get; set; }
 
         public bool HasLeft { get; set; }

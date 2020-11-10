@@ -67,11 +67,20 @@ namespace Cactus.Chat.Mongo
 
         public virtual async Task AddMessage(string chatId, T2 msg)
         {
+            var query = Builders<T1>.Filter.Where(e => e.Id == chatId);
             var builder = Builders<T1>.Update;
             var update = builder.Push(e => e.Messages, msg)
                 .Inc(e => e.MessageCount, 1)
                 .Set(e => e.LastActivity, msg.Timestamp);
-            await ChatCollection.FindOneAndUpdateAsync(e => e.Id == chatId, update);
+            await ChatCollection.FindOneAndUpdateAsync(query, update);
+            
+            //Set participant last activity
+            if (msg.Type == MessageType.Regular)
+            {
+                query |= Builders<T1>.Filter.ElemMatch(e => e.Participants, e => e.Id == msg.Author);
+                update = Builders<T1>.Update.Set(nameof(Chat<T2, T3>.Participants) + ".$." + nameof(ChatParticipant<T3>.LastMessageOn), msg.Timestamp);
+                await ChatCollection.FindOneAndUpdateAsync(query, update);
+            }
         }
 
         public virtual async Task SetParticipantRead(string chatId, string userId, DateTime timestamp)

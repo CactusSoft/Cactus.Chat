@@ -191,8 +191,11 @@ namespace Cactus.Chat.Storage
         {
             if (e == null)
                 return null;
+
             return new ChatParticipant<T3>
-            {
+            { 
+                IsMuted = e.IsMuted,
+                LastMessageOn = e.LastMessageOn,
                 HasLeft = e.HasLeft,
                 Id = e.Id,
                 DeliveredOn = e.DeliveredOn,
@@ -211,6 +214,7 @@ namespace Cactus.Chat.Storage
                 Message = e.Message,
                 Attachments = e.Attachments?.Select(Copy).ToArray(),
                 Author = e.Author,
+                Type = e.Type,
                 Timestamp = e.Timestamp
             };
         }
@@ -226,7 +230,7 @@ namespace Cactus.Chat.Storage
         {
             if (e == null)
                 return null;
-            return new T1()
+            return new T1
             {
                 Messages = e.Messages?.Select(Copy).ToList(),
                 Id = e.Id,
