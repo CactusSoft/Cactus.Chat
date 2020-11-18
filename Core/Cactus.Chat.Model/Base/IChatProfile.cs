@@ -4,6 +4,6 @@ namespace Cactus.Chat.Model.Base
 {
     public interface IChatProfile
     {
-        Uri Avatar { get; }
+        Uri Thumbnail { get; }
     }
 }

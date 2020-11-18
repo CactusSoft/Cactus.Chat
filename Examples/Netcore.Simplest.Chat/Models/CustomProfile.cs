@@ -8,6 +8,6 @@ namespace Netcore.Simplest.Chat.Models
         public string FirstName { get; set; }
 
         public string LastName { get; set; }
-        public Uri Avatar { get; set; }
+        public Uri Thumbnail { get; set; }
     }
 }

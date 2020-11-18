@@ -86,7 +86,7 @@ namespace Cactus.Chat.Grpc.Endpoints
                     ParticipantId = participantId,
                     Profile = new UserChatProfile
                     {
-                        Avatar = profile.Avatar?.ToString()
+                        Avatar = profile.Thumbnail?.ToString()
                     }
                 }
             };

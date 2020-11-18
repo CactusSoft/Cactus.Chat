@@ -21,7 +21,7 @@ namespace Netcore.Simplest.Chat.Integration
                 Profile = new CustomProfile()
                 {
                     FirstName = "Mr " + userId,
-                    Avatar = new Uri("http://thecatapi.com/api/images/get?format=src&type=png")
+                    Thumbnail = new Uri("http://thecatapi.com/api/images/get?format=src&type=png")
                 }
             });
         }
