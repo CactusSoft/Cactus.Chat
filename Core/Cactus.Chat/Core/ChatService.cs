@@ -392,7 +392,7 @@ namespace Cactus.Chat.Core
 
             chat.StartedOn = now;
             chat.StartedBy = authorId;
-            chat.LastActivity = now;
+            chat.LastActivityOn = now;
 
             if (chat.Messages != null)
             {

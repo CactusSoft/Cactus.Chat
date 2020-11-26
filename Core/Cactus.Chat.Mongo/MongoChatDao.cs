@@ -71,7 +71,7 @@ namespace Cactus.Chat.Mongo
             var builder = Builders<T1>.Update;
             var update = builder.Push(e => e.Messages, msg)
                 .Inc(e => e.MessageCount, 1)
-                .Set(e => e.LastActivity, msg.Timestamp);
+                .Set(e => e.LastActivityOn, msg.Timestamp);
             await ChatCollection.FindOneAndUpdateAsync(query, update);
             
             //Set participant last activity

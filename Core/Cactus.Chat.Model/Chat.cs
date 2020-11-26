@@ -24,7 +24,7 @@ namespace Cactus.Chat.Model
 
         public string StartedBy { get; set; }
 
-        public DateTime LastActivity { get; set; }
+        public DateTime LastActivityOn { get; set; }
 
         public int MessageCount { get; set; }
     }

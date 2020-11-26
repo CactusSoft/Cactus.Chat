@@ -39,7 +39,7 @@ namespace Netcore.Simplest.Chat.Test.Unit
             {
                 Id = ObjectId.GenerateNewId().ToString(),
                 MessageCount = 1,
-                LastActivity = DateTime.UtcNow,
+                LastActivityOn = DateTime.UtcNow,
                 Participants = new List<ChatParticipant<CustomProfile>>
                 {
                     new ChatParticipant<CustomProfile>

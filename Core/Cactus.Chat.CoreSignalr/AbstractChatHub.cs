@@ -262,6 +262,7 @@ namespace Cactus.Chat.Signalr
                     HasLeft = p.HasLeft,
                     ReadOn = p.ReadOn,
                     DeliveredOn = p.DeliveredOn,
+                    LastMessageOn = p.LastMessageOn,
                     IsOnline = _connectionStorage.ToEnumerable().Any(x => x.UserId == p.Id)
                 }).ToList(),
                 ReadOn = e.Participants.FirstOrDefault(p => p.Id == currentUserId)?.ReadOn,

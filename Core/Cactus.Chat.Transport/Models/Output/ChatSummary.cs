@@ -28,5 +28,6 @@ namespace Cactus.Chat.Transport.Models.Output
         public bool IsOnline { get; set; }
         public DateTime? ReadOn { get; set; }
         public DateTime? DeliveredOn { get; set; }
+        public DateTime? LastMessageOn { get; set; }
     }
 }

@@ -2,9 +2,8 @@
 using System.Threading.Tasks;
 using Cactus.Chat.Model;
 using Cactus.Chat.Model.Base;
-using Cactus.Chat.Transport;
 
-namespace Cactus.Chat
+namespace Cactus.Chat.Transport
 {
     public class NullClientEndpoint : IChatClientEndpoint
     {

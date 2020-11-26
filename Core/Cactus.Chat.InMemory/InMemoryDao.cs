@@ -14,7 +14,7 @@ namespace Cactus.Chat.Storage
         where T2 : InstantMessage, new()
         where T3 : IChatProfile, new()
     {
-        private static readonly IList<T1> ChatList = new List<T1>();
+        protected readonly IList<T1> ChatList = new List<T1>();
 
         public Task<IEnumerable<T1>> GetUserChatList(string userId, Expression<Func<T1, bool>> filter = null)
         {
@@ -187,7 +187,7 @@ namespace Cactus.Chat.Storage
                 $"InMemory, assembly version {Assembly.GetExecutingAssembly().GetName().Version.ToString(3)}");
         }
 
-        private ChatParticipant<T3> Copy(ChatParticipant<T3> e)
+        protected ChatParticipant<T3> Copy(ChatParticipant<T3> e)
         {
             if (e == null)
                 return null;
@@ -205,7 +205,7 @@ namespace Cactus.Chat.Storage
             };
         }
 
-        private T2 Copy(T2 e)
+        protected T2 Copy(T2 e)
         {
             if (e == null)
                 return null;
@@ -219,14 +219,14 @@ namespace Cactus.Chat.Storage
             };
         }
 
-        private Attachment Copy(Attachment e)
+        protected Attachment Copy(Attachment e)
         {
             if (e == null)
                 return null;
             return new Attachment {Name = e.Name, IconUrl = e.IconUrl, Size = e.Size, Url = e.Url, Type = e.Type};
         }
 
-        private T1 Copy(T1 e)
+        protected T1 Copy(T1 e)
         {
             if (e == null)
                 return null;
@@ -236,7 +236,7 @@ namespace Cactus.Chat.Storage
                 Id = e.Id,
                 Participants = e.Participants?.Select(Copy).ToList(),
                 Title = e.Title,
-                LastActivity = e.LastActivity,
+                LastActivityOn = e.LastActivityOn,
                 MessageCount = e.MessageCount,
                 StartedBy = e.StartedBy,
                 StartedOn = e.StartedOn
