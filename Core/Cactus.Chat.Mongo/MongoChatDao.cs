@@ -26,7 +26,8 @@ namespace Cactus.Chat.Mongo
             _log = log;
         }
 
-        public virtual async Task<IEnumerable<T1>> GetUserChatList(string userId, Expression<Func<T1, bool>> filter = null)
+        public virtual async Task<IEnumerable<T1>> GetUserChatList(string userId,
+            Expression<Func<T1, bool>> filter = null)
         {
             var qBuilder = Builders<T1>.Filter;
             var query = qBuilder.ElemMatch(e => e.Participants, e => e.Id == userId && !e.HasLeft && !e.IsDeleted);
@@ -42,6 +43,7 @@ namespace Cactus.Chat.Mongo
                         BsonSerializer.SerializerRegistry.GetSerializer<T1>(),
                         BsonSerializer.SerializerRegistry));
             }
+
             return (await ChatCollection.FindAsync(query)).ToEnumerable();
         }
 
@@ -67,20 +69,15 @@ namespace Cactus.Chat.Mongo
 
         public virtual async Task AddMessage(string chatId, T2 msg)
         {
-            var query = Builders<T1>.Filter.Where(e => e.Id == chatId);
-            var builder = Builders<T1>.Update;
-            var update = builder.Push(e => e.Messages, msg)
+            var query =
+                Builders<T1>.Filter.Eq(e => e.Id, chatId) &
+                Builders<T1>.Filter.ElemMatch(e => e.Participants, e => e.Id == msg.Author);
+            var update = Builders<T1>.Update
+                .Push(e => e.Messages, msg)
                 .Inc(e => e.MessageCount, 1)
-                .Set(e => e.LastActivityOn, msg.Timestamp);
-            await ChatCollection.FindOneAndUpdateAsync(query, update);
-            
-            //Set participant last activity
-            if (msg.Type == MessageType.Regular)
-            {
-                query |= Builders<T1>.Filter.ElemMatch(e => e.Participants, e => e.Id == msg.Author);
-                update = Builders<T1>.Update.Set(nameof(Chat<T2, T3>.Participants) + ".$." + nameof(ChatParticipant<T3>.LastMessageOn), msg.Timestamp);
-                await ChatCollection.FindOneAndUpdateAsync(query, update);
-            }
+                .Set(e => e.LastActivityOn, msg.Timestamp)
+                .Set(e => e.Participants[-1].LastMessageOn, msg.Timestamp);
+            await ChatCollection.UpdateOneAsync(query, update);
         }
 
         public virtual async Task SetParticipantRead(string chatId, string userId, DateTime timestamp)
@@ -108,22 +105,32 @@ namespace Cactus.Chat.Mongo
         private static UpdateDefinition<T1> GetChatReadOnUpdateDefinition(DateTime timestamp)
         {
             var uBuilder = Builders<T1>.Update;
-            var update = uBuilder.Set(nameof(Chat<InstantMessage, IChatProfile>.Participants) + ".$." + nameof(ChatParticipant<IChatProfile>.ReadOn), timestamp);
+            var update =
+                uBuilder.Set(
+                    nameof(Chat<InstantMessage, IChatProfile>.Participants) + ".$." +
+                    nameof(ChatParticipant<IChatProfile>.ReadOn), timestamp);
 
             return update;
         }
 
-        private static FilterDefinition<T1> CreateUnreadChatFilter(string userId, DateTime timestamp, FilterDefinitionBuilder<T1> qBuilder)
+        private static FilterDefinition<T1> CreateUnreadChatFilter(string userId, DateTime timestamp,
+            FilterDefinitionBuilder<T1> qBuilder)
         {
-            return qBuilder.ElemMatch(e => e.Participants, e => e.Id == userId && !e.HasLeft && !e.IsDeleted && (e.ReadOn < timestamp || e.ReadOn == null));
+            return qBuilder.ElemMatch(e => e.Participants,
+                e => e.Id == userId && !e.HasLeft && !e.IsDeleted && (e.ReadOn < timestamp || e.ReadOn == null));
         }
 
         public virtual async Task SetParticipantDelivered(string chatId, string userId, DateTime timestamp)
         {
             var qBuilder = Builders<T1>.Filter;
-            var query = qBuilder.Eq(e => e.Id, chatId) & qBuilder.ElemMatch(e => e.Participants, e => e.Id == userId && !e.HasLeft && !e.IsDeleted && (e.DeliveredOn < timestamp || e.DeliveredOn == null));
+            var query = qBuilder.Eq(e => e.Id, chatId) & qBuilder.ElemMatch(e => e.Participants,
+                e => e.Id == userId && !e.HasLeft && !e.IsDeleted &&
+                     (e.DeliveredOn < timestamp || e.DeliveredOn == null));
             var uBuilder = Builders<T1>.Update;
-            var update = uBuilder.Set(nameof(Chat<InstantMessage, IChatProfile>.Participants) + ".$." + nameof(ChatParticipant<IChatProfile>.DeliveredOn), timestamp);
+            var update =
+                uBuilder.Set(
+                    nameof(Chat<InstantMessage, IChatProfile>.Participants) + ".$." +
+                    nameof(ChatParticipant<IChatProfile>.DeliveredOn), timestamp);
             await ChatCollection.UpdateOneAsync(query, update);
         }
 
@@ -135,9 +142,13 @@ namespace Cactus.Chat.Mongo
         public virtual Task SetParticipantLeft(string chatId, string userId, bool hasLeft)
         {
             var qBuilder = Builders<T1>.Filter;
-            var query = qBuilder.Eq(e => e.Id, chatId) & qBuilder.ElemMatch(e => e.Participants, e => e.Id == userId && !e.IsDeleted);
+            var query = qBuilder.Eq(e => e.Id, chatId) &
+                        qBuilder.ElemMatch(e => e.Participants, e => e.Id == userId && !e.IsDeleted);
             var uBuilder = Builders<T1>.Update;
-            var update = uBuilder.Set(nameof(Chat<InstantMessage, IChatProfile>.Participants) + ".$." + nameof(ChatParticipant<IChatProfile>.HasLeft), hasLeft);
+            var update =
+                uBuilder.Set(
+                    nameof(Chat<InstantMessage, IChatProfile>.Participants) + ".$." +
+                    nameof(ChatParticipant<IChatProfile>.HasLeft), hasLeft);
             return ChatCollection.UpdateOneAsync(query, update);
         }
 
@@ -151,14 +162,17 @@ namespace Cactus.Chat.Mongo
             var qBuilder = Builders<T1>.Filter;
             var query = qBuilder.ElemMatch(e => e.Participants, e => e.Id == userId && !e.IsDeleted);
             var uBuilder = Builders<T1>.Update;
-            var update = uBuilder.Set(nameof(Chat<InstantMessage, IChatProfile>.Participants) + ".$." + nameof(ChatParticipant<IChatProfile>.IsDeleted), isDeleted);
+            var update =
+                uBuilder.Set(
+                    nameof(Chat<InstantMessage, IChatProfile>.Participants) + ".$." +
+                    nameof(ChatParticipant<IChatProfile>.IsDeleted), isDeleted);
             await ChatCollection.UpdateManyAsync(query, update);
-
         }
 
         public virtual async Task SetParticipants(string chatId, IList<ChatParticipant<T3>> participants)
         {
-            await ChatCollection.UpdateOneAsync(e => e.Id == chatId, Builders<T1>.Update.Set(e => e.Participants, participants));
+            await ChatCollection.UpdateOneAsync(e => e.Id == chatId,
+                Builders<T1>.Update.Set(e => e.Participants, participants));
         }
 
         public virtual async Task<IList<ChatParticipant<T3>>> GetParticipants(string chatId)
@@ -178,13 +192,17 @@ namespace Cactus.Chat.Mongo
             var qBuilder = Builders<T1>.Filter;
             var query = qBuilder.ElemMatch(e => e.Participants, e => e.Id == userId && !e.IsDeleted && !e.HasLeft);
             var uBuilder = Builders<T1>.Update;
-            var update = uBuilder.Set(nameof(Chat<InstantMessage, IChatProfile>.Participants) + ".$." + nameof(ChatParticipant<IChatProfile>.Profile), profile);
+            var update =
+                uBuilder.Set(
+                    nameof(Chat<InstantMessage, IChatProfile>.Participants) + ".$." +
+                    nameof(ChatParticipant<IChatProfile>.Profile), profile);
             await ChatCollection.UpdateManyAsync(query, update);
         }
 
         public virtual Task<string> GetInfo()
         {
-            return Task.FromResult($"MongoDB, assembly version {Assembly.GetExecutingAssembly().GetName().Version.ToString(3)}");
+            return Task.FromResult(
+                $"MongoDB, assembly version {Assembly.GetExecutingAssembly().GetName().Version.ToString(3)}");
         }
     }
 }

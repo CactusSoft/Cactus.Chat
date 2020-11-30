@@ -29,7 +29,8 @@ namespace Netcore.Simplest.Chat.Test
             if (_hostedChat == null)
                 _hostedChat = WebHost.CreateDefaultBuilder()
                     .ConfigureAppConfiguration(c =>
-                        c.AddInMemoryCollection(new[] {new KeyValuePair<string, string>("storage:type", "inMemory"),}))
+                        c.AddInMemoryCollection(new[] {new KeyValuePair<string, string>("storage:type", "inMemory"),})
+                    )
                     .UseUrls(BaseUrl)
                     .UseStartup<Startup>()
                     .Start(BaseUrl);
@@ -142,6 +143,7 @@ namespace Netcore.Simplest.Chat.Test
                     await Task.Delay(200);
                     await butters.GoodbyAsync();
                 }
+
                 // Wait chat is created and messages are sent
                 await Task.Delay(500);
                 await timmy.GoodbyAsync();
@@ -238,10 +240,13 @@ namespace Netcore.Simplest.Chat.Test
                         await Task.Delay(300);
                         await butters.Socket.ShutdownAsync("Butters says goodby");
                     }
+
                     await stan.Socket.ShutdownAsync("Stan says goodby");
                 }
+
                 await timmy.Socket.ShutdownAsync("Timmy says goodby");
             }
+
             Assert.IsNotNull(groupChatId);
             Assert.IsNotNull(p2pChatId);
             Assert.AreNotEqual(groupChatId, p2pChatId);
@@ -284,13 +289,17 @@ namespace Netcore.Simplest.Chat.Test
             {
                 Trace.WriteLine(ev.Method);
             }
+
             Trace.WriteLine("Timmy events (" + timmyEvents.Count + "):");
             foreach (var ev in timmyEvents)
             {
                 Trace.WriteLine(ev.Method);
             }
-            Assert.IsNotNull(buttersEvents.Single(e => e.Method == "messageNew" && e.ChatId == chatId1), "Ooops, Butters did not received message");
-            Assert.IsNotNull(timmyEvents.Single(e => e.Method == "messageNew" && e.ChatId == chatId1), "Ooops, Timmy did not received message");
+
+            Assert.IsNotNull(buttersEvents.Single(e => e.Method == "messageNew" && e.ChatId == chatId1),
+                "Ooops, Butters did not received message");
+            Assert.IsNotNull(timmyEvents.Single(e => e.Method == "messageNew" && e.ChatId == chatId1),
+                "Ooops, Timmy did not received message");
         }
 
         [TestMethod]
@@ -349,13 +358,14 @@ namespace Netcore.Simplest.Chat.Test
                     Assert.IsTrue(chatList.Any(e => e.Id == chatId));
                     await butters.GoodbyAsync();
                 }
+
                 await Task.Delay(200);
                 ValidateEvents(timmy,
                     "userDisconnected",
                     "participantLeft",
                     "messageNew",
                     "userConnected"
-                    );
+                );
             }
         }
 
@@ -415,6 +425,7 @@ namespace Netcore.Simplest.Chat.Test
 
                     await butters.GoodbyAsync();
                 }
+
                 await Task.Delay(200);
                 ValidateEvents(timmy,
                     "userDisconnected",
@@ -423,7 +434,7 @@ namespace Netcore.Simplest.Chat.Test
                     "participantStartTyping",
                     "messageNew",
                     "userConnected"
-                    );
+                );
             }
         }
 
@@ -458,7 +469,7 @@ namespace Netcore.Simplest.Chat.Test
                     "participantLeft",
                     "messageNew",
                     "userConnected"
-                    );
+                );
             }
         }
 
@@ -473,6 +484,7 @@ namespace Netcore.Simplest.Chat.Test
                 Assert.AreEqual(methods[i], e.Method, "fail on event #" + i);
                 i++;
             }
+
             Assert.AreEqual(methods.Length, i, "Mismatch event count");
         }
     }
