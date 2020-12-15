@@ -19,6 +19,7 @@ namespace Cactus.Chat.WebSockets
     {
         Task ShutdownAsync(string reason);
         WebSocketState State { get; }
+        DateTime LastByteReceivedOn { get; }
     }
 
     public class JrpcWebSocket : IJrpcWebSocket
@@ -31,12 +32,14 @@ namespace Cactus.Chat.WebSockets
         private bool _disposed;
         private readonly SemaphoreSlim _shutdownLock = new SemaphoreSlim(1);
         private readonly SemaphoreSlim _writeLock = new SemaphoreSlim(1);
+        private long _lastByteTimestamp;
 
         public JrpcWebSocket(WebSocket ws, ILogger<JrpcWebSocket> log)
         {
             _ws = ws;
             _log = log;
             _serializer = new JsonMessageFormatter();
+            _lastByteTimestamp = DateTime.UtcNow.Ticks;
         }
 
         public async ValueTask<JsonRpcMessage> ReadAsync(CancellationToken cancellationToken)
@@ -51,6 +54,7 @@ namespace Cactus.Chat.WebSockets
                 var res = await _ws.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
                 if (res.MessageType != WebSocketMessageType.Close)
                 {
+                    Interlocked.Exchange(ref _lastByteTimestamp, DateTime.UtcNow.Ticks);
                     var payload = await ReceivePayloadAsync(res, buffer, cancellationToken);
                     return _serializer.Deserialize(payload);
                 }
@@ -80,6 +84,7 @@ namespace Cactus.Chat.WebSockets
 
         public async Task ShutdownAsync(string reason)
         {
+            _log.LogDebug("Shutdown ws, reason: {reason}, socketState: {socket_state:G}", reason, State);
             if (State == WebSocketState.Open || State == WebSocketState.CloseReceived)
             {
                 if (await _shutdownLock.WaitAsync(200))
@@ -90,7 +95,7 @@ namespace Cactus.Chat.WebSockets
                     }
                     else
                     {
-                        _log.LogInformation("Websocket is {0}, nothing to shutdown.", _ws.State.ToString("G"));
+                        _log.LogInformation("Websocket is {socket_state:G}, nothing to shutdown.", _ws.State);
                     }
 
                     _shutdownLock.Release();
@@ -138,6 +143,7 @@ namespace Cactus.Chat.WebSockets
         }
 
         public WebSocketState State => _ws.State;
+        public DateTime LastByteReceivedOn => new DateTime(Interlocked.Read(ref _lastByteTimestamp));
 
         private async Task<ReadOnlySequence<byte>> ReceivePayloadAsync(WebSocketReceiveResult res, byte[] buffer,
             CancellationToken cancellationToken)
@@ -169,6 +175,7 @@ namespace Cactus.Chat.WebSockets
 
         protected virtual void Dispose(bool disposing)
         {
+            _log.LogDebug("Disposing({is_disposing})", disposing);
             if (disposing && !_disposed)
             {
                 _disposed = true;

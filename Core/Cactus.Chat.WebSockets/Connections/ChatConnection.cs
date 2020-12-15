@@ -14,6 +14,7 @@ namespace Cactus.Chat.WebSockets.Connections
     public class ChatConnection : IChatConnection
     {
         private readonly object _messageTarget;
+        private readonly TimeSpan _deadTimeout;
         private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger<ChatConnection> _log;
         private readonly IJrpcWebSocket _socket;
@@ -23,13 +24,15 @@ namespace Cactus.Chat.WebSockets.Connections
             string connectionId,
             string userId,
             string broadcastGroup,
-            JrpcWebSocket socket,
+            IJrpcWebSocket socket,
             object messageTarget,
+            TimeSpan deadTimeout,
             ILoggerFactory loggerFactory)
         {
             Id = connectionId ?? throw new ArgumentException(nameof(connectionId));
             UserId = userId ?? throw new ArgumentException(nameof(userId));
             _messageTarget = messageTarget;
+            _deadTimeout = deadTimeout;
             _loggerFactory = loggerFactory;
             _log = loggerFactory.CreateLogger<ChatConnection>();
             _socket = socket;
@@ -69,23 +72,43 @@ namespace Cactus.Chat.WebSockets.Connections
                         //JsonRpc task has been completed, break the circle
                         break;
                     }
+
+                    //Let's check the last byte timestamp
+                    var delay = DateTime.UtcNow - _socket.LastByteReceivedOn;
+                    if (delay.Duration() > _deadTimeout)
+                    {
+                        _log.LogInformation(
+                            "Connection looks dead, {connection_id}/{user_id}, delay is {delay}, the last byte received on {timestamp}",
+                            Id, UserId, delay.Duration(), _socket.LastByteReceivedOn);
+                        break;
+                    }
+
+                    _log.LogDebug("Listening circle: {connection_id}/{user_id}, last byte received on",
+                        Id, UserId, _socket.LastByteReceivedOn);
                 }
+            }
+            catch (Exception ex)
+            {
+                _log.LogWarning("Exception in listening circle for {connection_id}/{user_id}, {exception}",
+                    Id, UserId, ex.Message);
             }
             finally
             {
+                _log.LogDebug("Listening circle finalization: {connection_id}/{user_id}", Id, UserId);
                 JsonRpc?.Dispose();
                 Client = new NullClientEndpoint();
             }
 
             if (cancellationToken.IsCancellationRequested && !JsonRpc.Completion.IsCompleted)
             {
-                //The listening has been cancelled outside. Do graceful shutdown?
-                _log.LogDebug("Listening stopped by outside cancellation request, {connection_id}/{user_id}", Id,
-                    UserId);
+                _log.LogDebug("Listening stopped by outside cancellation request, {connection_id}/{user_id}",
+                    Id, UserId);
             }
             else
             {
-                _log.LogDebug("Listening stopped by JsonRpc.Completion signal, {connection_id}/{user_id}", Id, UserId);
+                _log.LogDebug(
+                    "Listening stopped by JsonRpc.Completion signal, {connection_id}/{user_id}, socket {socket_state:G}",
+                    Id, UserId, _socket.State);
                 if (JsonRpc?.Completion.Exception != null)
                     _log.LogWarning("JsonRpc.Completion exception: {exception}", JsonRpc.Completion.Exception);
             }

@@ -53,6 +53,12 @@ namespace Cactus.Chat.WebSockets.Endpoints
                 Timestamp = DateTime.UtcNow,
             };
         }
+        
+        public Task Alive()
+        {
+            _log.LogDebug("Alive {connection_id} : {user_id}", _authContext.ConnectionId, _authContext.GetUserId());
+            return Task.CompletedTask;
+        }
 
         public async Task<DateTime> SendMessage(string chatId, T2 message)
         {

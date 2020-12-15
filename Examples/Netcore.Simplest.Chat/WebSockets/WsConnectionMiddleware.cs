@@ -25,7 +25,7 @@ namespace Netcore.Simplest.Chat.WebSockets
             IConnectionStorage connectionStorage,
             IChatService<Chat<CustomIm, CustomProfile>, CustomIm, CustomProfile> chatService,
             ILoggerFactory loggerFactory
-            ) : base(loggerFactory.CreateLogger<WsConnectionMiddleware>())
+        ) : base(loggerFactory.CreateLogger<WsConnectionMiddleware>())
         {
             _connectionStorage = connectionStorage;
             _chatService = chatService;
@@ -44,7 +44,7 @@ namespace Netcore.Simplest.Chat.WebSockets
                 ConnectionId = Guid.NewGuid().ToString("N")
             };
         }
-        
+
         protected override string GetBroadcastGroup(IAuthContext auth)
         {
             var broadcastGroup = "*";
@@ -54,20 +54,21 @@ namespace Netcore.Simplest.Chat.WebSockets
                 broadcastGroup = userId.Substring(broadcastDelimiterIndex + 1);
             return broadcastGroup;
         }
-        
+
         protected override IChatConnection BuildChatConnection(IAuthContext auth, string broadcastGroup,
             WebSocket socket)
         {
             var jrpcWebSocket = new JrpcWebSocket(socket, _loggerFactory.CreateLogger<JrpcWebSocket>());
             var soketTargetService = new JrpcChatServerEndpoint(_chatService, auth, _connectionStorage,
                 _loggerFactory.CreateLogger<JrpcChatServerEndpoint>());
-            
+
             return new ChatConnection(
                 auth.ConnectionId,
                 auth.GetUserId(),
                 broadcastGroup,
                 jrpcWebSocket,
                 soketTargetService,
+                TimeSpan.FromSeconds(6),
                 _loggerFactory
             );
         }

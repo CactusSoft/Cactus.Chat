@@ -57,6 +57,15 @@ namespace Netcore.Simplest.Chat.Test
         }
 
         [TestMethod]
+        public async Task InactivityTestAsync()
+        {
+            using var chat = await JrpcChat.Connect(WsEndpoint, Auth.Timmy());
+            var res = await chat.Ping();
+            await Task.Delay(10000);
+            Assert.AreEqual(WebSocketState.Aborted, chat.Socket.State);
+        }
+
+        [TestMethod]
         public async Task GetContactsOnlineTestAsync()
         {
             using (var chat = await JrpcChat.Connect(WsEndpoint, Auth.Timmy()))
