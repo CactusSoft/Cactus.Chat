@@ -83,6 +83,11 @@ namespace Netcore.Simplest.Chat.Test
         {
             await _rpc.InvokeAsync<JObject>("StartTyping", chatId);
         }
+        
+        public async Task Alive()
+        {
+            await _rpc.NotifyAsync("Alive");
+        }
 
         public async Task StopTyping(string chatId)
         {

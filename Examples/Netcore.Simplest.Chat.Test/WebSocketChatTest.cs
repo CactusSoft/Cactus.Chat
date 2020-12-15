@@ -57,12 +57,25 @@ namespace Netcore.Simplest.Chat.Test
         }
 
         [TestMethod]
-        public async Task InactivityTestAsync()
+        public async Task AbortDueToInactivityTestAsync()
         {
             using var chat = await JrpcChat.Connect(WsEndpoint, Auth.Timmy());
             var res = await chat.Ping();
             await Task.Delay(10000);
             Assert.AreEqual(WebSocketState.Aborted, chat.Socket.State);
+        }
+        
+        [TestMethod]
+        public async Task AlivePreventAbortTestAsync()
+        {
+            using var chat = await JrpcChat.Connect(WsEndpoint, Auth.Timmy());
+            var delayTask=Task.Delay(10000);
+            while (!delayTask.IsCompleted)
+            {
+                await chat.Alive();
+                await Task.Delay(2000);
+            }
+            Assert.AreEqual(WebSocketState.Open, chat.Socket.State);
         }
 
         [TestMethod]
