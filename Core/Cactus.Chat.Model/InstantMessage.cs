@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson.Serialization.Options;
 
 namespace Cactus.Chat.Model
 {
@@ -26,6 +28,12 @@ namespace Cactus.Chat.Model
         /// Message attachments
         /// </summary>
         public ICollection<Attachment> Attachments { get; set; }
+        
+        /// <summary>
+        /// Metadata
+        /// </summary>
+        [BsonDictionaryOptions(DictionaryRepresentation.Document)]
+        public IDictionary<string,object> Metadata { get; set; }
     }
 
     public enum MessageType

@@ -6,7 +6,7 @@
     <ProjectGuid>{289A84BC-04BC-4679-8422-6C1BAD889CDE}</ProjectGuid>
     <RepositoryUrl>https://github.com/CactusSoft/Cactus.Chat</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageVersion>3.0.8</PackageVersion>
+    <PackageVersion>3.0.9</PackageVersion>
     <Copyright>CactusSoft LLC</Copyright>
     <PackageProjectUrl>https://github.com/CactusSoft/Cactus.Chat</PackageProjectUrl>
     <AssemblyVersion>3.0.8</AssemblyVersion>

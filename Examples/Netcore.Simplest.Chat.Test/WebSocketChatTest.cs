@@ -64,17 +64,18 @@ namespace Netcore.Simplest.Chat.Test
             await Task.Delay(10000);
             Assert.AreEqual(WebSocketState.Aborted, chat.Socket.State);
         }
-        
+
         [TestMethod]
         public async Task AlivePreventAbortTestAsync()
         {
             using var chat = await JrpcChat.Connect(WsEndpoint, Auth.Timmy());
-            var delayTask=Task.Delay(10000);
+            var delayTask = Task.Delay(10000);
             while (!delayTask.IsCompleted)
             {
                 await chat.Alive();
                 await Task.Delay(2000);
             }
+
             Assert.AreEqual(WebSocketState.Open, chat.Socket.State);
         }
 
@@ -174,6 +175,45 @@ namespace Netcore.Simplest.Chat.Test
                     "messageNew",
                     "participantStopTyping",
                     "participantStartTyping",
+                    "userConnected");
+            }
+        }
+
+        [TestMethod]
+        public async Task MessageMetadataTestAsync()
+        {
+            var salt = Guid.NewGuid().ToString("N");
+
+            using (var timmy = await JrpcChat.Connect(WsEndpoint, Auth.Timmy(salt)))
+            {
+                await timmy.Ping();
+                using (var butters = await JrpcChat.Connect(WsEndpoint, Auth.Butters(salt)))
+                {
+                    await Task.Delay(100);
+                    var chatId = (await butters.StartChat(null, timmy.Auth.User)).Id;
+                    var chat = await butters.GetChat(chatId);
+                    Assert.AreEqual(2, chat.Participants.Count);
+                    Assert.IsTrue(chat.Participants.First(p => p.Id == timmy.Auth.User).IsOnline);
+                    await butters.SendMessage(chatId, "tru-la-la",
+                        new Dictionary<string, object> {{"test", "test_payload"}});
+                    await Task.Delay(300);
+                    var messages = (await butters.GetMessages(chatId, DateTime.MinValue, DateTime.MaxValue)).ToList();
+                    Assert.IsNotNull(messages);
+                    Assert.IsTrue(messages.Any());
+                    Assert.AreEqual("tru-la-la", messages.Last().Message);
+                    Assert.IsNotNull(messages.Last().Metadata);
+                    Assert.IsTrue(messages.Last().Metadata.ContainsKey("test"));
+                    Assert.AreEqual("test_payload", messages.Last().Metadata["test"]);
+                    await Task.Delay(200);
+                    await butters.GoodbyAsync();
+                }
+
+                // Wait chat is created and messages are sent
+                await Task.Delay(500);
+                await timmy.GoodbyAsync();
+                ValidateEvents(timmy,
+                    "userDisconnected",
+                    "messageNew",
                     "userConnected");
             }
         }

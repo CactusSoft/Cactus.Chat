@@ -193,7 +193,7 @@ namespace Cactus.Chat.Storage
                 return null;
 
             return new ChatParticipant<T3>
-            { 
+            {
                 IsMuted = e.IsMuted,
                 LastMessageOn = e.LastMessageOn,
                 HasLeft = e.HasLeft,
@@ -215,7 +215,8 @@ namespace Cactus.Chat.Storage
                 Attachments = e.Attachments?.Select(Copy).ToArray(),
                 Author = e.Author,
                 Type = e.Type,
-                Timestamp = e.Timestamp
+                Timestamp = e.Timestamp,
+                Metadata = e.Metadata?.ToDictionary(x => x.Key, x => x.Value)
             };
         }
 

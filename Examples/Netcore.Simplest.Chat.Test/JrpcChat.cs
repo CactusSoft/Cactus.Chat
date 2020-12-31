@@ -83,7 +83,7 @@ namespace Netcore.Simplest.Chat.Test
         {
             await _rpc.InvokeAsync<JObject>("StartTyping", chatId);
         }
-        
+
         public async Task Alive()
         {
             await _rpc.NotifyAsync("Alive");
@@ -94,14 +94,16 @@ namespace Netcore.Simplest.Chat.Test
             await _rpc.InvokeAsync<JObject>("StopTyping", chatId);
         }
 
-        public async Task<DateTime> SendMessage(string chatId, string message)
+        public async Task<DateTime> SendMessage(string chatId, string message,
+            IDictionary<string, object> metadata = null)
         {
             Assert.IsNotNull(chatId);
             Assert.IsNotNull(message);
 
             return await _rpc.InvokeAsync<DateTime>("SendMessage", chatId, new InstantMessage
             {
-                Message = message
+                Message = message,
+                Metadata = metadata
             });
         }
 

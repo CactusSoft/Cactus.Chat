@@ -20,7 +20,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <RepositoryUrl>https://github.com/CactusSoft/Cactus.Chat</RepositoryUrl>
     <LangVersion>9</LangVersion>
-    <PackageVersion>3.0.7</PackageVersion>
+    <PackageVersion>3.0.9</PackageVersion>
     <AssemblyVersion>3.0.7</AssemblyVersion>
     <FileVersion>3.0.7</FileVersion>
   </PropertyGroup>

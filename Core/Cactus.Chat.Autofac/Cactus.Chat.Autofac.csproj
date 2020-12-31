@@ -14,7 +14,7 @@
     <FileVersion>3.0.7</FileVersion>
     <LangVersion>9</LangVersion>
     <RepositoryUrl>https://github.com/CactusSoft/Cactus.Chat</RepositoryUrl>
-    <PackageVersion>3.0.7</PackageVersion>
+    <PackageVersion>3.0.9</PackageVersion>
     <Authors>YanO</Authors>
   </PropertyGroup>
 
