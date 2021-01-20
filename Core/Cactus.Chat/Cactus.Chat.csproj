@@ -13,11 +13,11 @@
     <PackageIconUrl></PackageIconUrl>
     <PackageLicenseUrl></PackageLicenseUrl>
     <ProjectGuid>{233B6069-692B-44CB-9501-570CCEAFB015}</ProjectGuid>
-    <AssemblyVersion>3.0.7</AssemblyVersion>
-    <FileVersion>3.0.7</FileVersion>
+    <AssemblyVersion>3.0.12</AssemblyVersion>
+    <FileVersion>3.0.12</FileVersion>
     <LangVersion>9</LangVersion>
     <RepositoryUrl>https://github.com/CactusSoft/Cactus.Chat</RepositoryUrl>
-    <PackageVersion>3.0.9</PackageVersion>
+    <PackageVersion>3.0.12</PackageVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

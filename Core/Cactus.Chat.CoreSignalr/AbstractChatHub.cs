@@ -71,6 +71,22 @@ namespace Cactus.Chat.Signalr
             return message.Timestamp;
         }
 
+        public Task<IEnumerable<UserStatus>> GetUserStatus(string[] userIds)
+        {
+            var ctx = AuthContext;
+            _log.LogInformation("GetUserStatus() [{user_id}]", ctx.GetUserId());
+            var me = _connectionStorage.Get(ctx.ConnectionId);
+            if (userIds == null || userIds.Length == 0)
+                return Task.FromResult(Enumerable.Empty<UserStatus>());
+            return Task.FromResult(userIds.Select(id => new UserStatus
+            {
+                Id = id,
+                IsOnline = _connectionStorage.ToEnumerable()
+                    .Where(e => e.BroadcastGroup == me.BroadcastGroup)
+                    .Any(e => e.UserId == id)
+            }));
+        }
+
         public async Task<ChatSummary<T2, T3>> StartChat(T1 chat)
         {
             var ctx = AuthContext;

@@ -10,11 +10,11 @@
     <PackageProjectUrl>https://github.com/CactusSoft/Cactus.Chat</PackageProjectUrl>
     <PackageIconUrl></PackageIconUrl>
     <ProjectGuid>{5243BFE6-7B3D-4B58-A9A4-6555D38E8C20}</ProjectGuid>
-    <AssemblyVersion>3.0.7</AssemblyVersion>
-    <FileVersion>3.0.7</FileVersion>
+    <AssemblyVersion>3.0.12</AssemblyVersion>
+    <FileVersion>3.0.12</FileVersion>
     <LangVersion>9</LangVersion>
     <RepositoryUrl>https://github.com/CactusSoft/Cactus.Chat</RepositoryUrl>
-    <PackageVersion>3.0.9</PackageVersion>
+    <PackageVersion>3.0.12</PackageVersion>
     <Authors>YanO</Authors>
   </PropertyGroup>
 

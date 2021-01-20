@@ -131,6 +131,11 @@ namespace Netcore.Simplest.Chat.Test
             Assert.IsNotNull(chatId);
             return await _rpc.InvokeAsync<ChatSummary<CustomIm, CustomProfile>>("GetChat", chatId);
         }
+        
+        public Task<IEnumerable<UserStatus>> GetUserStatus(params string[] userIds)
+        {
+            return _rpc.InvokeAsync<IEnumerable<UserStatus>>("GetUserStatus", userIds?.ToList());
+        }
 
         public async Task LeaveChat(string chatId)
         {

@@ -8,11 +8,11 @@
     <LangVersion>9</LangVersion>
     <RepositoryUrl>https://github.com/CactusSoft/Cactus.Chat</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageVersion>3.0.9</PackageVersion>
+    <PackageVersion>3.0.12</PackageVersion>
     <Copyright>CactusSoft LLC</Copyright>
     <PackageProjectUrl>https://github.com/CactusSoft/Cactus.Chat</PackageProjectUrl>
-    <AssemblyVersion>3.0.7</AssemblyVersion>
-    <FileVersion>3.0.7</FileVersion>
+    <AssemblyVersion>3.0.12</AssemblyVersion>
+    <FileVersion>3.0.12</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

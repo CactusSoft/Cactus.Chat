@@ -99,6 +99,29 @@ namespace Netcore.Simplest.Chat.Test
         }
 
         [TestMethod]
+        public async Task GetUserStatusTestAsync()
+        {
+            using (var chat = await JrpcChat.Connect(WsEndpoint, Auth.Timmy()))
+            using (await JrpcChat.Connect(WsEndpoint, Auth.Timmy()))
+            using (await JrpcChat.Connect(WsEndpoint, Auth.Butters()))
+            using (await JrpcChat.Connect(WsEndpoint, Auth.Butters()))
+            using (await JrpcChat.Connect(WsEndpoint, Auth.Kartman()))
+            using (await JrpcChat.Connect(WsEndpoint, Auth.Stranger()))
+            {
+                var res = (await chat.GetUserStatus(
+                    Auth.Timmy().User,
+                    Auth.Butters().User,
+                    Auth.Kartman().User,
+                    Auth.Stranger().User)).ToList();
+                await chat.GoodbyAsync();
+                Assert.AreEqual(4, res.Count);
+                Assert.IsTrue(res.FirstOrDefault(e => e.Id == Auth.Butters().User)?.IsOnline ?? false);
+                Assert.IsTrue(res.FirstOrDefault(e => e.Id == Auth.Kartman().User)?.IsOnline ?? false);
+                Assert.IsFalse(res.FirstOrDefault(e => e.Id == Auth.Stranger().User)?.IsOnline ?? false, "Stranger is in different BroadcastGroup");
+            }
+        }
+
+        [TestMethod]
         public async Task ErrorTestAsync()
         {
             using (var chat = await JrpcChat.Connect(WsEndpoint, Auth.Timmy()))

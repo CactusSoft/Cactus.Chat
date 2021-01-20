@@ -53,7 +53,7 @@ namespace Cactus.Chat.WebSockets.Endpoints
                 Timestamp = DateTime.UtcNow,
             };
         }
-        
+
         public Task Alive()
         {
             _log.LogDebug("Alive {connection_id} : {user_id}", _authContext.ConnectionId, _authContext.GetUserId());
@@ -84,6 +84,21 @@ namespace Cactus.Chat.WebSockets.Endpoints
                         .Distinct()
                         .ToList() //Make a copy, a kind of snapshot
                     as IEnumerable<string>);
+        }
+
+        public Task<IEnumerable<UserStatus>> GetUserStatus(string[] userIds)
+        {
+            _log.LogInformation("GetUserStatus() [{user_id}]", _authContext.GetUserId());
+            var me = _connectionStorage.Get(_authContext.ConnectionId);
+            if (userIds == null || userIds.Length == 0)
+                return Task.FromResult(Enumerable.Empty<UserStatus>());
+            return Task.FromResult(userIds.Select(id => new UserStatus
+            {
+                Id = id,
+                IsOnline = _connectionStorage.ToEnumerable()
+                    .Where(e => e.BroadcastGroup == me.BroadcastGroup)
+                    .Any(e => e.UserId == id)
+            }));
         }
 
         public async Task<ChatSummary<T2, T3>> StartChat(T1 chat)

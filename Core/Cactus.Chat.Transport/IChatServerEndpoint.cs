@@ -32,6 +32,12 @@ namespace Cactus.Chat.Transport
         /// </summary>
         /// <returns>List of user id</returns>
         Task<IEnumerable<string>> GetContactsOnline();
+        
+        /// <summary>
+        /// Retrieve list of users and their current status
+        /// </summary>
+        /// <returns>List of users</returns>
+        Task<IEnumerable<UserStatus>> GetUserStatus(string[] userIds);
 
         /// <summary>
         /// Start new chat

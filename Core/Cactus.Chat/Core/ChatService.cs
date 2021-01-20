@@ -10,6 +10,7 @@ using Cactus.Chat.External;
 using Cactus.Chat.Model;
 using Cactus.Chat.Model.Base;
 using Cactus.Chat.Storage;
+using Cactus.Chat.Storage.Error;
 using Microsoft.Extensions.Logging;
 
 namespace Cactus.Chat.Core
@@ -24,14 +25,15 @@ namespace Cactus.Chat.Core
         private readonly IChatDao<T1, T2, T3> _storage;
         private readonly IEventHub _bus;
         private readonly ILogger _log;
-        private readonly SemaphoreSlim _createChatLocker = new SemaphoreSlim(1);
+        private readonly SemaphoreSlim _createChatLocker = new(1);
+        protected readonly int ConcurrencyRetryCount = 3;
 
         public ChatService(
             ISecurityManager<T1, T2, T3> securityManager,
             IUserProfileProvider<T3> userProfileProvider,
             IChatDao<T1, T2, T3> storage,
             IEventHub bus,
-            ILogger<ChatService<T1,T2,T3>> log)
+            ILogger<ChatService<T1, T2, T3>> log)
         {
             _securityManager = securityManager;
             _userProfileProvider = userProfileProvider;
@@ -91,17 +93,31 @@ namespace Cactus.Chat.Core
                 throw new ArgumentException("Message could not be empty");
             }
 
-            var chat = await _storage.Get(chatId).ConfigureAwait(false);
+            var chat = await _storage.Get(chatId);
             await _securityManager.TrySendMessage(me, chatId, message, new Lazy<T1>(() => chat));
 
             await ReviveP2PChat(chat);
 
             _log.LogDebug("Send message to chat {chat_id}, msg: {message}", chatId, message.Message.Secure());
             var userId = me.GetUserId();
-            message.Timestamp = DateTime.UtcNow.RoundToMilliseconds();
             message.Author = userId;
 
-            await _storage.AddMessage(chatId, message);
+            for (var i = 0; i < ConcurrencyRetryCount; i++)
+            {
+                try
+                {
+                    message.Timestamp = DateTime.UtcNow.RoundToMilliseconds();
+                    await _storage.AddMessage(chatId, message);
+                }
+                catch (ConcurrencyException)
+                {
+                    if (i == ConcurrencyRetryCount - 1) throw;
+                    continue;
+                }
+
+                await Task.Delay(3);
+            }
+
             await PushNewMessage(chatId, me, message);
             _log.LogDebug("Message added to chat successfully");
         }
@@ -125,7 +141,7 @@ namespace Cactus.Chat.Core
 
             var source = moveBackward ? chat.Messages.ReverseEnumerable() : chat.Messages;
             source = moveBackward
-                ? source.Where(m => m.Timestamp < @from && m.Timestamp >= to)
+                ? source.Where(m => m.Timestamp <= @from && m.Timestamp > to)
                 : source.Where(m => m.Timestamp > @from && m.Timestamp <= to);
             source = source.Take(count);
             if (moveBackward)
@@ -422,7 +438,8 @@ namespace Cactus.Chat.Core
                     throw new ArgumentException("User is deleted");
                 }
 
-                _log.LogDebug("P2P chat detected, id:{chat_id}. One or both users left the chat. Need to revive.", chat.Id);
+                _log.LogDebug("P2P chat detected, id:{chat_id}. One or both users left the chat. Need to revive.",
+                    chat.Id);
                 foreach (var p in chat.Participants)
                 {
                     if (p.HasLeft)

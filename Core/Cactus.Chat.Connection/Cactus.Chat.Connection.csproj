@@ -9,12 +9,12 @@
     <ProjectGuid>{129A84BC-04BC-4989-8433-6C1BAD871CDE}</ProjectGuid>
     <LangVersion>9</LangVersion>
     <RepositoryUrl>https://github.com/CactusSoft/Cactus.Chat</RepositoryUrl>
-    <PackageVersion>3.0.9</PackageVersion>
+    <PackageVersion>3.0.12</PackageVersion>
     <Copyright>CactusSoft LLC</Copyright>
     <PackageProjectUrl>https://github.com/CactusSoft/Cactus.Chat</PackageProjectUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>3.0.7</AssemblyVersion>
-    <FileVersion>3.0.7</FileVersion>
+    <AssemblyVersion>3.0.12</AssemblyVersion>
+    <FileVersion>3.0.12</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

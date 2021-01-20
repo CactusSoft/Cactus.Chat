@@ -13,11 +13,11 @@
     <PackageIconUrl></PackageIconUrl>
     <PackageReleaseNotes />
     <ProjectGuid>{2BB0054F-5D85-4DCF-992A-B6E87E1C39BB}</ProjectGuid>
-    <AssemblyVersion>3.0.7</AssemblyVersion>
-    <FileVersion>3.0.7</FileVersion>
+    <AssemblyVersion>3.0.12</AssemblyVersion>
+    <FileVersion>3.0.12</FileVersion>
     <RepositoryUrl>https://github.com/CactusSoft/Cactus.Chat</RepositoryUrl>
     <LangVersion>9</LangVersion>
-    <PackageVersion>3.0.9</PackageVersion>
+    <PackageVersion>3.0.13</PackageVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -36,7 +36,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MongoDB.Driver" Version="2.8.0" />
+    <PackageReference Include="MongoDB.Driver" Version="2.11.5" />
   </ItemGroup>
 
   <ItemGroup>

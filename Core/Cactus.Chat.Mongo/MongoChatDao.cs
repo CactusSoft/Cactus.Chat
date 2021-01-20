@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Cactus.Chat.Model;
 using Cactus.Chat.Model.Base;
 using Cactus.Chat.Storage;
+using Cactus.Chat.Storage.Error;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
@@ -71,13 +72,24 @@ namespace Cactus.Chat.Mongo
         {
             var query =
                 Builders<T1>.Filter.Eq(e => e.Id, chatId) &
-                Builders<T1>.Filter.ElemMatch(e => e.Participants, e => e.Id == msg.Author);
+                Builders<T1>.Filter.ElemMatch(e => e.Participants,
+                    e => e.Id == msg.Author && e.LastMessageOn < msg.Timestamp);
             var update = Builders<T1>.Update
                 .Push(e => e.Messages, msg)
                 .Inc(e => e.MessageCount, 1)
                 .Set(e => e.LastActivityOn, msg.Timestamp)
                 .Set(e => e.Participants[-1].LastMessageOn, msg.Timestamp);
-            await ChatCollection.UpdateOneAsync(query, update);
+            var res = await ChatCollection.UpdateOneAsync(query, update);
+            if (res.MatchedCount == 0)
+            {
+                _log.LogWarning("Nothing is updated during adding message, maybe because of concurrent update");
+                var count = await ChatCollection.CountDocumentsAsync(
+                    Builders<T1>.Filter.Eq(e => e.Id, chatId) &
+                    Builders<T1>.Filter.ElemMatch(e => e.Participants, e => e.Id == msg.Author)
+                );
+                if (count > 0) throw new ConcurrencyException();
+                throw new NotFoundException();
+            }
         }
 
         public virtual async Task SetParticipantRead(string chatId, string userId, DateTime timestamp)
