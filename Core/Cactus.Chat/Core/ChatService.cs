@@ -413,6 +413,7 @@ namespace Cactus.Chat.Core
             if (chat.Messages != null)
             {
                 chat.MessageCount = chat.Messages.Count;
+                chat.Participants.First(e => e.Id == authorId).LastMessageOn = now;
                 chat.Messages.ForEach(x =>
                 {
                     x.Timestamp = chat.StartedOn;
