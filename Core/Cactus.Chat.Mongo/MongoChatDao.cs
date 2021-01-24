@@ -73,7 +73,7 @@ namespace Cactus.Chat.Mongo
             var query =
                 Builders<T1>.Filter.Eq(e => e.Id, chatId) &
                 Builders<T1>.Filter.ElemMatch(e => e.Participants,
-                    e => e.Id == msg.Author && e.LastMessageOn < msg.Timestamp);
+                    e => e.Id == msg.Author && (e.LastMessageOn < msg.Timestamp || e.LastMessageOn == null));
             var update = Builders<T1>.Update
                 .Push(e => e.Messages, msg)
                 .Inc(e => e.MessageCount, 1)

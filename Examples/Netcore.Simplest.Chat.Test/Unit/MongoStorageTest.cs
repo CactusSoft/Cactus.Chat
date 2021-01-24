@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Cactus.Chat;
 using Cactus.Chat.Model;
 using Cactus.Chat.Mongo;
 using Cactus.Chat.Storage.Error;
@@ -141,6 +144,40 @@ namespace Netcore.Simplest.Chat.Test.Unit
             await Assert.ThrowsExceptionAsync<NotFoundException>(() =>
                 dao.AddMessage(chat.Id,
                     new CustomIm {Author = ObjectId.GenerateNewId().ToString(), Timestamp = now.AddSeconds(1)}));
+        }
+        
+        [TestMethod]
+        public async Task EmptyChatAddMessageTest()
+        {
+            var now = DateTime.UtcNow.RoundToMilliseconds();
+            var userId = ObjectId.GenerateNewId().ToString();
+            var chat = new Chat<CustomIm, CustomProfile>
+            {
+                Participants = new[]
+                {
+                    new ChatParticipant<CustomProfile>
+                    {
+                        Id = userId,
+                    },
+                    new ChatParticipant<CustomProfile>
+                    {
+                        Id = ObjectId.GenerateNewId().ToString()
+                    }
+                },
+                Messages = new List<CustomIm>()
+            };
+            await _chatCollection.InsertOneAsync(chat);
+
+            //act
+            var dao = new MongoChatDao<Chat<CustomIm, CustomProfile>, CustomIm, CustomProfile>(_chatCollection,
+                NullLogger.Instance);
+            await dao.AddMessage(chat.Id, new CustomIm {Author = userId, Timestamp = now});
+
+            //assert
+            var resChat = (await _chatCollection.FindAsync(e => e.Id == chat.Id)).First();
+            Assert.AreEqual(1, resChat.MessageCount);
+            Assert.AreEqual(now, resChat.LastActivityOn);
+            Assert.AreEqual(now, resChat.Participants.First(e => e.Id == userId).LastMessageOn);
         }
     }
 }
