@@ -75,5 +75,42 @@ namespace Netcore.Simplest.Chat.Test.Unit
             _securityManagerMock.VerifyAll();
             authContextMock.VerifyAll();
         }
+
+        [TestMethod]
+        public async Task AddMessageSuccessAtOnceTest()
+        {
+            var chatId = ObjectId.GenerateNewId().ToString();
+            var userId = ObjectId.GenerateNewId().ToString();
+            var chat = new Chat<CustomIm, CustomProfile>
+            {
+                Participants = new[]
+                {
+                    new ChatParticipant<CustomProfile>
+                    {
+                        Id = userId
+                    },
+                    new ChatParticipant<CustomProfile>
+                    {
+                        Id = ObjectId.GenerateNewId().ToString()
+                    }
+                }
+            };
+            var authContextMock = new Mock<IAuthContext>();
+            authContextMock.Setup(e => e.GetUserId()).Returns(userId);
+            _chatDaoMock.Setup(e => e.AddMessage(chatId, It.IsAny<CustomIm>())).Returns(Task.CompletedTask);
+            _chatDaoMock.Setup(e => e.Get(chatId)).Returns(Task.FromResult(chat));
+            _securityManagerMock.Setup(e => e.TrySendMessage(authContextMock.Object, chatId, It.IsAny<CustomIm>(),
+                    It.IsAny<Lazy<Chat<CustomIm, CustomProfile>>>()))
+                .Returns(Task.CompletedTask);
+
+            //act
+            await _chatService.SendMessage(authContextMock.Object, chatId,
+                new CustomIm {Author = userId, Message = "text"});
+
+            //assert
+            _chatDaoMock.Verify(e => e.AddMessage(chatId, It.IsAny<CustomIm>()), Times.Exactly(1));
+            _securityManagerMock.VerifyAll();
+            authContextMock.VerifyAll();
+        }
     }
 }

@@ -108,14 +108,13 @@ namespace Cactus.Chat.Core
                 {
                     message.Timestamp = DateTime.UtcNow.RoundToMilliseconds();
                     await _storage.AddMessage(chatId, message);
+                    break;
                 }
                 catch (ConcurrencyException)
                 {
                     if (i == ConcurrencyRetryCount - 1) throw;
-                    continue;
+                    await Task.Delay(3);
                 }
-
-                await Task.Delay(3);
             }
 
             await PushNewMessage(chatId, me, message);

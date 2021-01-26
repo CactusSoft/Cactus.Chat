@@ -117,7 +117,8 @@ namespace Netcore.Simplest.Chat.Test
                 Assert.AreEqual(4, res.Count);
                 Assert.IsTrue(res.FirstOrDefault(e => e.Id == Auth.Butters().User)?.IsOnline ?? false);
                 Assert.IsTrue(res.FirstOrDefault(e => e.Id == Auth.Kartman().User)?.IsOnline ?? false);
-                Assert.IsFalse(res.FirstOrDefault(e => e.Id == Auth.Stranger().User)?.IsOnline ?? false, "Stranger is in different BroadcastGroup");
+                Assert.IsFalse(res.FirstOrDefault(e => e.Id == Auth.Stranger().User)?.IsOnline ?? false,
+                    "Stranger is in different BroadcastGroup");
             }
         }
 
@@ -184,6 +185,7 @@ namespace Netcore.Simplest.Chat.Test
                     await Task.Delay(300);
                     var messages = (await butters.GetMessages(chatId, DateTime.MinValue, DateTime.MaxValue)).ToList();
                     Assert.IsNotNull(messages);
+                    Assert.AreEqual(1, messages.Count);
                     Assert.IsTrue(messages.Any());
                     Assert.AreEqual("tru-la-la", messages.Last().Message);
                     await Task.Delay(200);
