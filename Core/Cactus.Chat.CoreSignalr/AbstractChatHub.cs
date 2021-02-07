@@ -65,7 +65,7 @@ namespace Cactus.Chat.Signalr
         {
             var ctx = AuthContext;
             _log.LogInformation("SendMessage(chatId:{chat_Id}) [{user_id}]", chatId, ctx.GetUserId());
-            await TranslateExceptionIfFail(async () => { await _chatService.SendMessage(ctx, chatId, message); });
+            await TranslateExceptionIfFailAsync(async () => { await _chatService.SendMessage(ctx, chatId, message); });
 
             _log.LogDebug("Message sent to chatId {chat_id}, returns {timestamp}", chatId, message.Timestamp);
             return message.Timestamp;
@@ -91,7 +91,7 @@ namespace Cactus.Chat.Signalr
         {
             var ctx = AuthContext;
             _log.LogInformation("StartChat() [{user_id}]", ctx.GetUserId());
-            await TranslateExceptionIfFail(async () => { chat = await _chatService.StartChat(AuthContext, chat); });
+            await TranslateExceptionIfFailAsync(async () => { chat = await _chatService.StartChat(AuthContext, chat); });
 
             _log.LogInformation("Chat started, id: {chat_id}", chat.Id);
             return BuildChatDto(chat, AuthContext.GetUserId());
@@ -159,7 +159,7 @@ namespace Cactus.Chat.Signalr
         {
             var ctx = AuthContext;
             _log.LogInformation("LeaveChat(chatId:{chat_id}) [{user_id}]", chatId, ctx.GetUserId());
-            await TranslateExceptionIfFail(async () => { await _chatService.LeaveChat(ctx, chatId); });
+            await TranslateExceptionIfFailAsync(async () => { await _chatService.LeaveChat(ctx, chatId); });
         }
 
         public async Task Read(string chatId, DateTime timestamp)
@@ -167,14 +167,14 @@ namespace Cactus.Chat.Signalr
             var ctx = AuthContext;
             _log.LogInformation("Read(chatId:{chat_id}, timestamp:{timestamp}) [{user_id)}]", chatId, timestamp,
                 ctx.GetUserId());
-            await TranslateExceptionIfFail(async () => { await _chatService.MarkRead(ctx, chatId, timestamp); });
+            await TranslateExceptionIfFailAsync(async () => { await _chatService.MarkRead(ctx, chatId, timestamp); });
         }
 
         public async Task ReadAll(DateTime timestamp)
         {
             var ctx = AuthContext;
             _log.LogInformation("ReadAll(timestamp:{timestamp}) [{user_id}]", timestamp, ctx.GetUserId());
-            await TranslateExceptionIfFail(async () => { await _chatService.MarkReadBulk(ctx, timestamp); });
+            await TranslateExceptionIfFailAsync(async () => { await _chatService.MarkReadBulk(ctx, timestamp); });
         }
 
         public async Task Received(string chatId, DateTime timestamp)
@@ -182,14 +182,14 @@ namespace Cactus.Chat.Signalr
             var ctx = AuthContext;
             _log.LogInformation("Received(chatId:{chat_id}, timestamp:{timestamp}) [{user_id}]", chatId, timestamp,
                 ctx.GetUserId());
-            await TranslateExceptionIfFail(async () => { await _chatService.MarkDelivered(ctx, chatId, timestamp); });
+            await TranslateExceptionIfFailAsync(async () => { await _chatService.MarkDelivered(ctx, chatId, timestamp); });
         }
 
         public async Task AddParticipants(string chatId, AddParticipantsCommand participants)
         {
             var ctx = AuthContext;
             _log.LogInformation("AddParticipants(chatId:{chat_id}) [{user_id}]", chatId, ctx.GetUserId());
-            await TranslateExceptionIfFail(async () =>
+            await TranslateExceptionIfFailAsync(async () =>
             {
                 Validate.NotNull(participants);
                 await _chatService.AddParticipants(ctx, chatId, participants.Ids);
@@ -290,24 +290,11 @@ namespace Cactus.Chat.Signalr
             };
         }
 
-        protected async Task TranslateExceptionIfFail(Func<Task> action)
+        protected virtual async Task TranslateExceptionIfFailAsync(Func<Task> action)
         {
             try
             {
                 await action();
-            }
-            catch (Exception ex)
-            {
-                _log.LogError(ex.ToString());
-                throw BuildException(ex);
-            }
-        }
-
-        protected async Task<T> TranslateExceptionIfFail<T>(Func<Task<T>> action)
-        {
-            try
-            {
-                return await action();
             }
             catch (Exception ex)
             {

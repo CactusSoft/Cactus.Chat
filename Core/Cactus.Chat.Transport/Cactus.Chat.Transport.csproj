@@ -5,7 +5,7 @@
     <LangVersion>9</LangVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <RepositoryUrl>https://github.com/CactusSoft/Cactus.Chat</RepositoryUrl>
-    <PackageVersion>3.0.12</PackageVersion>
+    <PackageVersion>3.0.15</PackageVersion>
     <PackageProjectUrl>https://github.com/CactusSoft/Cactus.Chat</PackageProjectUrl>
     <AssemblyVersion>3.0.12</AssemblyVersion>
     <FileVersion>3.0.12</FileVersion>

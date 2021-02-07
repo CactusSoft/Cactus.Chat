@@ -3,7 +3,7 @@
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <PackageVersion>3.0.12</PackageVersion>
+        <PackageVersion>3.0.15</PackageVersion>
         <Title>Cactus.Chat.InMemory</Title>
         <AssemblyVersion>3.0.12</AssemblyVersion>
         <FileVersion>3.0.12</FileVersion>

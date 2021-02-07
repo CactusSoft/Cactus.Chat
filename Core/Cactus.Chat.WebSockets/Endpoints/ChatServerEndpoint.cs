@@ -117,14 +117,14 @@ namespace Cactus.Chat.WebSockets.Endpoints
         {
             _log.LogInformation("GetChats() [{user_id}]", _authContext.GetUserId());
             var userId = _authContext.GetUserId();
-            var res = await _chatService.Get(_authContext);
+            var res = await TranslateExceptionIfFailAsync(() => _chatService.Get(_authContext));
             return res.Select(e => BuildChatDto(e, userId));
         }
 
         public async Task<ChatSummary<T2, T3>> GetChat(string id)
         {
             _log.LogInformation("GetChat(id:{id}) [{user_id}]", id, _authContext.GetUserId());
-            var res = await _chatService.Get(_authContext, id);
+            var res = await TranslateExceptionIfFailAsync(() => _chatService.Get(_authContext, id));
             var dto = BuildChatDto(res, _authContext.GetUserId());
             return dto;
         }
@@ -160,11 +160,11 @@ namespace Cactus.Chat.WebSockets.Endpoints
             return res;
         }
 
-        public async Task ChangeTitle(string chatId, string title)
+        public Task ChangeTitle(string chatId, string title)
         {
             _log.LogInformation("ChangeTitle(chatId:{chat_id}, title:{chat_title}) [{user_id}]", chatId, title,
                 _authContext.GetUserId());
-            await _chatService.ChangeTitle(_authContext, chatId, title);
+            return TranslateExceptionIfFailAsync(() => _chatService.ChangeTitle(_authContext, chatId, title));
         }
 
         public async Task LeaveChat(string chatId)
@@ -212,16 +212,16 @@ namespace Cactus.Chat.WebSockets.Endpoints
             });
         }
 
-        public async Task StartTyping(string chatId)
+        public Task StartTyping(string chatId)
         {
             _log.LogInformation("StartTyping(chatId:{chat_id}) [{user_id}]", chatId, _authContext.GetUserId());
-            await _chatService.ParticipantStartTyping(_authContext, chatId);
+            return TranslateExceptionIfFailAsync(() => _chatService.ParticipantStartTyping(_authContext, chatId));
         }
 
-        public async Task StopTyping(string chatId)
+        public Task StopTyping(string chatId)
         {
             _log.LogInformation("AddParticipants(chatId:{chat_id}) [{user_id}]", chatId, _authContext.GetUserId());
-            await _chatService.ParticipantStopTyping(_authContext, chatId);
+            return TranslateExceptionIfFailAsync(() => _chatService.ParticipantStopTyping(_authContext, chatId));
         }
 
         //public IList<string> GetContactsOnline()
@@ -246,6 +246,19 @@ namespace Cactus.Chat.WebSockets.Endpoints
             try
             {
                 await action();
+            }
+            catch (Exception ex)
+            {
+                _log.LogError(ex.ToString());
+                throw BuildException(ex);
+            }
+        }
+
+        protected async Task<T> TranslateExceptionIfFailAsync<T>(Func<Task<T>> action)
+        {
+            try
+            {
+                return await action();
             }
             catch (Exception ex)
             {

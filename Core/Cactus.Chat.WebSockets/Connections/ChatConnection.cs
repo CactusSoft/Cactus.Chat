@@ -78,13 +78,13 @@ namespace Cactus.Chat.WebSockets.Connections
                     if (delay.Duration() > _deadTimeout)
                     {
                         _log.LogInformation(
-                            "Connection looks dead, {connection_id}/{user_id}, delay is {delay}, the last byte received on {timestamp}",
-                            Id, UserId, delay.Duration(), _socket.LastByteReceivedOn);
+                            "Connection looks dead, {connection_id}/{user_id}, delay is {delay}, the last byte received {seconds:N2}s ago",
+                            Id, UserId, delay.Duration(), (DateTime.UtcNow-_socket.LastByteReceivedOn).TotalSeconds);
                         break;
                     }
 
-                    _log.LogDebug("Listening circle: {connection_id}/{user_id}, last byte received on",
-                        Id, UserId, _socket.LastByteReceivedOn);
+                    _log.LogDebug("Listening circle: {connection_id}/{user_id}, last byte received {seconds:N2}s ago",
+                        Id, UserId, (DateTime.UtcNow-_socket.LastByteReceivedOn).TotalSeconds);
                 }
             }
             catch (Exception ex)

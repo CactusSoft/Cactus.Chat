@@ -50,7 +50,9 @@ namespace Cactus.Chat.Mongo
 
         public virtual async Task<T1> Get(string chatId)
         {
-            return await ChatCollection.Find(e => e.Id == chatId).FirstAsync();
+            var res = await ChatCollection.Find(e => e.Id == chatId).FirstOrDefaultAsync();
+            _ = res ?? throw new NotFoundException($"Chat {chatId} not found");
+            return res;
         }
 
         public virtual async Task<T1> FindChatWithParticipants(string userId1, string userId2)
@@ -88,17 +90,17 @@ namespace Cactus.Chat.Mongo
                     Builders<T1>.Filter.ElemMatch(e => e.Participants, e => e.Id == msg.Author)
                 );
                 if (count > 0) throw new ConcurrencyException();
-                throw new NotFoundException();
+                throw new NotFoundException($"Chat {chatId} wit active participant {msg.Author} not found");
             }
         }
 
-        public virtual async Task SetParticipantRead(string chatId, string userId, DateTime timestamp)
+        public virtual Task SetParticipantRead(string chatId, string userId, DateTime timestamp)
         {
             var qBuilder = Builders<T1>.Filter;
             var query = qBuilder.Eq(e => e.Id, chatId) & CreateUnreadChatFilter(userId, timestamp, qBuilder);
             var update = GetChatReadOnUpdateDefinition(timestamp);
 
-            await ChatCollection.UpdateOneAsync(query, update);
+            return ChatCollection.UpdateOneAsync(query, update);
         }
 
         public virtual async Task<IEnumerable<string>> SetParticipantReadAll(string userId, DateTime timestamp)
@@ -132,7 +134,7 @@ namespace Cactus.Chat.Mongo
                 e => e.Id == userId && !e.HasLeft && !e.IsDeleted && (e.ReadOn < timestamp || e.ReadOn == null));
         }
 
-        public virtual async Task SetParticipantDelivered(string chatId, string userId, DateTime timestamp)
+        public virtual Task SetParticipantDelivered(string chatId, string userId, DateTime timestamp)
         {
             var qBuilder = Builders<T1>.Filter;
             var query = qBuilder.Eq(e => e.Id, chatId) & qBuilder.ElemMatch(e => e.Participants,
@@ -143,7 +145,7 @@ namespace Cactus.Chat.Mongo
                 uBuilder.Set(
                     nameof(Chat<InstantMessage, IChatProfile>.Participants) + ".$." +
                     nameof(ChatParticipant<IChatProfile>.DeliveredOn), timestamp);
-            await ChatCollection.UpdateOneAsync(query, update);
+            return ChatCollection.UpdateOneAsync(query, update);
         }
 
         public virtual Task SetParticipantLeft(string chatId, string userId)
@@ -151,7 +153,7 @@ namespace Cactus.Chat.Mongo
             return SetParticipantLeft(chatId, userId, true);
         }
 
-        public virtual Task SetParticipantLeft(string chatId, string userId, bool hasLeft)
+        public virtual async Task SetParticipantLeft(string chatId, string userId, bool hasLeft)
         {
             var qBuilder = Builders<T1>.Filter;
             var query = qBuilder.Eq(e => e.Id, chatId) &
@@ -161,7 +163,8 @@ namespace Cactus.Chat.Mongo
                 uBuilder.Set(
                     nameof(Chat<InstantMessage, IChatProfile>.Participants) + ".$." +
                     nameof(ChatParticipant<IChatProfile>.HasLeft), hasLeft);
-            return ChatCollection.UpdateOneAsync(query, update);
+            var res = await ChatCollection.UpdateOneAsync(query, update);
+            if (res.MatchedCount == 0) throw new NotFoundException($"Chat {chatId} not found");
         }
 
         public virtual Task SetParticipantDeleted(string userId)
@@ -183,20 +186,24 @@ namespace Cactus.Chat.Mongo
 
         public virtual async Task SetParticipants(string chatId, IList<ChatParticipant<T3>> participants)
         {
-            await ChatCollection.UpdateOneAsync(e => e.Id == chatId,
+            var res = await ChatCollection.UpdateOneAsync(e => e.Id == chatId,
                 Builders<T1>.Update.Set(e => e.Participants, participants));
+            if (res.MatchedCount == 0) throw new NotFoundException($"Chat {chatId} not found");
         }
 
         public virtual async Task<IList<ChatParticipant<T3>>> GetParticipants(string chatId)
         {
-            return await ChatCollection.Find(e => e.Id == chatId).Project(e => e.Participants).FirstAsync();
+            var res = await ChatCollection.Find(e => e.Id == chatId).Project(e => e.Participants).FirstOrDefaultAsync();
+            if (res == null) throw new NotFoundException($"Chat {chatId} not found");
+            return res;
         }
 
         public virtual async Task SetTitle(string chatId, string title)
         {
             var uBuilder = Builders<T1>.Update;
             var update = uBuilder.Set(e => e.Title, title);
-            await ChatCollection.UpdateOneAsync(e => e.Id == chatId, update);
+            var res = await ChatCollection.UpdateOneAsync(e => e.Id == chatId, update);
+            if (res.MatchedCount == 0) throw new NotFoundException($"Chat {chatId} not found");
         }
 
         public virtual async Task UpdateProfile(string userId, T3 profile)

@@ -10,6 +10,8 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MongoDB.Bson;
+using StreamJsonRpc;
 
 namespace Netcore.Simplest.Chat.Test
 {
