@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Cactus.Chat.Model;
 using Cactus.Chat.Model.Base;
+using Cactus.Chat.Storage.Error;
 
 namespace Cactus.Chat.Storage
 {
@@ -28,7 +29,9 @@ namespace Cactus.Chat.Storage
 
         public Task<T1> Get(string chatId)
         {
-            return Task.FromResult(Copy(ChatList.First(e => e.Id == chatId)));
+            var chat = ChatList.FirstOrDefault(e => e.Id == chatId);
+            _ = chat ?? throw new NotFoundException($"Chat {chatId} not found");
+            return Task.FromResult(Copy(chat));
         }
 
         public Task<T1> FindChatWithParticipants(string userId1, string userId2)
@@ -51,8 +54,7 @@ namespace Cactus.Chat.Storage
         public Task AddMessage(string chatId, T2 msg)
         {
             var chat = ChatList.FirstOrDefault(e => e.Id == chatId);
-            if (chat == null)
-                throw new ArgumentException("chatId");
+            _ = chat ?? throw new NotFoundException($"Chat {chatId} not found");
             if (chat.Messages == null)
                 chat.Messages = new List<T2>();
             chat.Messages.Add(Copy(msg));
@@ -95,8 +97,7 @@ namespace Cactus.Chat.Storage
         public Task SetParticipantDelivered(string chatId, string userId, DateTime timestamp)
         {
             var chat = ChatList.FirstOrDefault(e => e.Id == chatId);
-            if (chat == null)
-                throw new ArgumentException("chatId");
+            _ = chat ?? throw new NotFoundException($"Chat {chatId} not found");
             if (chat.Participants == null)
                 throw new ArgumentException("chat has no participants");
             var usr = chat.Participants.FirstOrDefault(e => e.Id == userId);
@@ -114,8 +115,7 @@ namespace Cactus.Chat.Storage
         public Task SetParticipantLeft(string chatId, string userId, bool hasLeft)
         {
             var chat = ChatList.FirstOrDefault(e => e.Id == chatId);
-            if (chat == null)
-                throw new ArgumentException("chatId");
+            _ = chat ?? throw new NotFoundException($"Chat {chatId} not found");
             if (chat.Participants == null)
                 throw new ArgumentException("chat has no participants");
             var usr = chat.Participants.FirstOrDefault(e => e.Id == userId);
@@ -145,8 +145,7 @@ namespace Cactus.Chat.Storage
         public Task SetParticipants(string chatId, IList<ChatParticipant<T3>> participants)
         {
             var chat = ChatList.FirstOrDefault(e => e.Id == chatId);
-            if (chat == null)
-                throw new ArgumentException("chatId");
+            _ = chat ?? throw new NotFoundException($"Chat {chatId} not found");
             chat.Participants = participants.Select(Copy).ToList();
             return Task.FromResult(0);
         }
@@ -154,8 +153,7 @@ namespace Cactus.Chat.Storage
         public Task<IList<ChatParticipant<T3>>> GetParticipants(string chatId)
         {
             var chat = ChatList.FirstOrDefault(e => e.Id == chatId);
-            if (chat == null)
-                throw new ArgumentException("chatId");
+            _ = chat ?? throw new NotFoundException($"Chat {chatId} not found");
             IList<ChatParticipant<T3>> res = chat.Participants.Select(Copy).ToList();
             return Task.FromResult(res);
         }
@@ -163,8 +161,7 @@ namespace Cactus.Chat.Storage
         public Task SetTitle(string chatId, string title)
         {
             var chat = ChatList.FirstOrDefault(e => e.Id == chatId);
-            if (chat == null)
-                throw new ArgumentException("chatId");
+            _ = chat ?? throw new NotFoundException($"Chat {chatId} not found");
             chat.Title = title;
             return Task.FromResult(0);
         }
