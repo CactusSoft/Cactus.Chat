@@ -71,6 +71,12 @@ namespace Cactus.Chat.Core
                 }
 
                 await _storage.Create(chat);
+                await _bus.FireEvent(new ChatCreated<T1, T2, T3>
+                {
+                    UserId = me.GetUserId(),
+                    ConnectionId = me.ConnectionId,
+                    Chat = chat
+                });
                 foreach (var message in chat.Messages)
                 {
                     await PushNewMessage(chat.Id, me, message);
@@ -265,8 +271,18 @@ namespace Cactus.Chat.Core
                         continue;
                     }
 
-                    _log.LogDebug("Participant {user_id} has marked as active", participant.Id);
+                    _log.LogDebug("Return left participant {user_id} back to chat {chat_id}", participant.Id, chatId);
+                    var user = await _userProfileProvider.Get(participantId);
+                    participant.Profile = user.Profile;
+                    participant.IsDeleted = user.IsDeleted;
                     participant.HasLeft = false;
+                    events.Add(new ParticipantAdded<T3>
+                    {
+                        ChatId = chatId,
+                        Participant = user,
+                        UserId = me.GetUserId(),
+                        ConnectionId = me.ConnectionId
+                    });
                     needUpdate = true;
                 }
                 else
